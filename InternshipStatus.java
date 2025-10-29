@@ -1,4 +1,4 @@
-public enums InternshipStatus{
+public enum InternshipStatus{
   PENDING,
   APPROVED,
   REJECTED,
