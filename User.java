@@ -14,14 +14,19 @@ public abstract class User {
     public void setName(String name){
         this.name = name;
     }
-    public boolean changePassword(String oldPassword, String newPassword){
-        
-        if (oldPassword.equals(password)){
+    public boolean changePassword(String oldPassword, String newPassword) {
+        if (oldPassword.equals(password)) {
             password = newPassword;
             return true;
         }
-        else{
-            return false;
-        }
-    } 
+        return false;
+    }
+
+    public boolean verifyPassword(String inputPassword) {
+        return password.equals(inputPassword);
+    }
+
+    public void setPassword(String newPassword) {
+        this.password = newPassword;
+    }
 }
