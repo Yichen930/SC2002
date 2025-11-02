@@ -34,7 +34,23 @@ public class Application {
     }
 
     public boolean isSuccessful() {
-        return status == ApplicationStatus.SUCCESSFUL;
+        return status == ApplicationStatus.ACCEPTED;
+    }
+
+    public boolean isPending() {
+        return status == ApplicationStatus.PENDING;
+    }
+
+    public boolean isConfirmed() {
+        return status == ApplicationStatus.ACCEPTED;
+    }
+
+    public WithdrawalRequest getWithdrawal() {
+        return withdrawal;
+    }
+
+    public void setWithdrawal(WithdrawalRequest withdrawal) {
+        this.withdrawal = withdrawal;
     }
 
     @Override
