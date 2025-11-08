@@ -1,3 +1,6 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -142,7 +145,7 @@ public class Main {
             
             switch (choice) {
                 case 1:
-                    viewAvailableInternships();
+                    viewAvailableInternships(student);
                     break;
                 case 2:
                     viewMyApplications(student);
@@ -223,8 +226,8 @@ public class Main {
             }
         }
 
-        private void viewAvailableInternships() {
-            Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
+        private void viewAvailableInternships(Student student) {
+            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
             System.out.println("\n--- Available Internships ---");
             if (opportunities.isEmpty()) {
                 System.out.println("No internships available at the moment.");
@@ -233,6 +236,8 @@ public class Main {
                 for (InternshipOpportunity opp : opportunities) {
                     System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
                     System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                    System.out.println("   Open: " + opp.getOpenDate() + " | Close: " + opp.getCloseDate());
+                    System.out.println("   Remaining slots: " + opp.remainingSlots());
                     index++;
                 }
             }
@@ -254,23 +259,26 @@ public class Main {
         }
 
         private void applyForInternship(Student student) {
-            Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
+            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
             if (opportunities.isEmpty()) {
                 System.out.println("No internships available to apply for.");
                 return;
             }
 
             System.out.println("\n--- Available Internships ---");
-            InternshipOpportunity[] oppArray = opportunities.toArray(new InternshipOpportunity[0]);
-            for (int i = 0; i < oppArray.length; i++) {
-                System.out.println((i + 1) + ". " + oppArray[i].getTitle() + " - " + oppArray[i].getCompanyName());
+            for (int i = 0; i < opportunities.size(); i++){
+                InternshipOpportunity opp = opportunities.get(i);
+                System.out.println((i+1) + ". " + opp.getTitle() + " - " + opp.getCompanyName());
+                System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                System.out.println("   Open: " + opp.getOpenDate() + " | Close: " + opp.getCloseDate());
+                System.out.println("   Remaining slots: " + opp.remainingSlots());
             }
 
             System.out.print("Select internship number to apply: ");
             int choice = getIntInput();
             
-            if (choice > 0 && choice <= oppArray.length) {
-                InternshipOpportunity selected = oppArray[choice - 1];
+            if (choice > 0 && choice <= opportunities.size()) {
+                InternshipOpportunity selected = opportunities.get(choice - 1);
                 if (student.canApplyForInternship(selected)) {
                     Application app = new Application(student, selected);
                     student.addApplication(app);
@@ -304,9 +312,40 @@ public class Main {
                 opp.setLevel(InternshipLevel.BASIC);
             }
             
+            // Preferred Majors are missing.
+
+            // Setting the amount of slots available for internship. Edit this later to ensure max is 10.
             System.out.print("Enter total slots: ");
             int slots = getIntInput();
             opp.setTotalSlots(slots);
+
+            // Setting dates for internships
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            System.out.print("Enter open date (yyyy-MM-dd): ");
+            String openDateStr = scanner.nextLine().trim();
+            System.out.print("Enter close date (yyyy-MM-dd): ");
+            String closeDateStr = scanner.nextLine().trim();
+
+            try{
+                LocalDate openDate = LocalDate.parse(openDateStr, formatter);
+                LocalDate closeDate =  LocalDate.parse(closeDateStr, formatter);
+
+                if (closeDate.isBefore(openDate)) {
+                    System.out.println("Close date cannot be before open date. Setting today as the starting date and 30 days later to be the closing date.");
+                    LocalDate today = LocalDate.now();
+                    opp.setOpenDate(today);
+                    opp.setCloseDate(today.plusDays(30));
+                } else { 
+                    opp.setOpenDate(openDate);
+                    opp.setCloseDate(closeDate);
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Setting today as the starting date and 30 days later to be the closing date. ");
+                LocalDate today = LocalDate.now();
+                opp.setOpenDate(today);
+                opp.setCloseDate(today.plusDays(30));
+            }
             
             // Add the opportunity directly (staff approval will happen later)
             internshipController.addOpportunity(opp);
@@ -452,8 +491,8 @@ public class Main {
         }
 
         private void viewAllInternships() {
-            Set<InternshipOpportunity> all = internshipController.showAllInternshipOpportunities();
             System.out.println("\n--- All Internship Opportunities ---");
+            Set<InternshipOpportunity> all = internshipController.showAllInternshipOpportunities();
             if (all.isEmpty()) {
                 System.out.println("No internships in the system.");
             }

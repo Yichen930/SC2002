@@ -2,6 +2,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 public class InternshipController {
     private List<InternshipOpportunity> opportunities;
@@ -90,6 +91,31 @@ public class InternshipController {
 
     public List<InternshipOpportunity> getAllOpportunities() {
         return new ArrayList<>(opportunities);
+    }
+
+    public List<InternshipOpportunity> getFilteredOpportunities(Student student) {
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        
+        for (InternshipOpportunity opp : opportunities) {
+            // Empty
+            if (opp == null) continue;
+            // Check if visible
+            if (!opp.isVisible()) continue;
+            // Status must be approved
+           if (opp.getStatus() != InternshipStatus.APPROVED) continue;
+            // Date must be within range
+            if(opp.getOpenDate() == null || opp.getCloseDate() == null) continue;
+            if (today.isBefore(opp.getOpenDate()) || today.isAfter(opp.getCloseDate())) continue;
+            // Level eligibility
+            if (!student.canApplyForLevel(opp.getLevel())) continue;
+            // Preferred major filter (if set)
+            List<String> preferred = opp.getPreferredMajor();
+            if (preferred != null && !preferred.isEmpty() && !preferred.contains(student.getMajor())) continue;
+
+            filtered.add(opp);
+        }   
+        return filtered;
     }
 }
 
