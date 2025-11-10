@@ -17,6 +17,10 @@ public class Main {
         private RegistrationController registrationController;
         private DataManager dataManager;
         private User currentUser;
+        
+        // Filter persistence for user session
+        private InternshipLevel lastFilterLevel = null;
+        private boolean hasLevelFilter = false;
 
         public CLI() {
             this.scanner = new Scanner(System.in);
@@ -290,9 +294,16 @@ public class Main {
         private void browseInternshipsWithFilters(Student student) {
             System.out.println("\n--- Browse Internships ---");
             System.out.println("Showing internships filtered by your profile (Year " + student.getYear() + ", " + student.getMajor() + ")");
+            
+            // Display saved filter if exists
+            if (hasLevelFilter && lastFilterLevel != null) {
+                System.out.println("(Last filter: " + lastFilterLevel + " level)");
+            }
+            
             System.out.println("Filter by:");
             System.out.println("1. All eligible internships (filtered by major, level, dates)");
             System.out.println("2. Additional filter by level");
+            System.out.println("3. Use last filter" + (hasLevelFilter ? " (" + lastFilterLevel + ")" : " (none saved)"));
             System.out.print("Choose filter option: ");
             
             int filterChoice = getIntInput();
@@ -304,10 +315,23 @@ public class Main {
                 try {
                     InternshipLevel level = InternshipLevel.valueOf(levelStr);
                     opportunities = internshipController.filterByLevel(opportunities, level);
+                    // Save filter for next time
+                    lastFilterLevel = level;
+                    hasLevelFilter = true;
+                    System.out.println("Filter saved for this session.");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Invalid level. Showing all eligible internships.");
+                    hasLevelFilter = false;
                 }
+            } else if (filterChoice == 3 && hasLevelFilter && lastFilterLevel != null) {
+                opportunities = internshipController.filterByLevel(opportunities, lastFilterLevel);
+                System.out.println("Applied last filter: " + lastFilterLevel);
+            } else {
+                hasLevelFilter = false;
             }
+            
+            // Sort alphabetically by title (default sorting per assignment)
+            opportunities.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
             
             displayInternshipList(opportunities);
         }
@@ -374,6 +398,9 @@ public class Main {
                 System.out.println("Internships are filtered by your year, major, and eligibility.");
                 return;
             }
+
+            // Sort alphabetically by title (default sorting per assignment)
+            opportunities.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
 
             System.out.println("\n--- Available Internships (Filtered for You) ---");
             for (int i = 0; i < opportunities.size(); i++) {
@@ -551,8 +578,12 @@ public class Main {
                 opp.setLevel(InternshipLevel.BASIC);
             }
             
-            System.out.print("Enter total slots: ");
+            System.out.print("Enter total slots (max 10): ");
             int slots = getIntInput();
+            if (slots < 1 || slots > 10) {
+                System.out.println("Invalid slots. Must be between 1 and 10. Setting to 5.");
+                slots = 5;
+            }
             opp.setTotalSlots(slots);
             
             System.out.print("Enter open date (YYYY-MM-DD): ");
@@ -643,10 +674,14 @@ public class Main {
                     }
                 }
                 
-                System.out.print("New total slots (0 to keep current): ");
+                System.out.print("New total slots (0 to keep current, max 10): ");
                 int slots = getIntInput();
                 if (slots > 0) {
-                    selected.setTotalSlots(slots);
+                    if (slots > 10) {
+                        System.out.println("Maximum 10 slots allowed. Keeping current.");
+                    } else {
+                        selected.setTotalSlots(slots);
+                    }
                 }
                 
                 System.out.println("Internship updated successfully!");
@@ -874,6 +909,9 @@ public class Main {
                 return;
             }
             
+            // Sort alphabetically by title
+            pending.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
+            
             System.out.println("\n--- Pending Internship Opportunities ---");
             for (int i = 0; i < pending.size(); i++) {
                 InternshipOpportunity opp = pending.get(i);
@@ -926,6 +964,8 @@ public class Main {
             for (int i = 0; i < pending.size(); i++) {
                 CompanyRepresentative rep = pending.get(i);
                 System.out.println((i + 1) + ". " + rep.getName() + " - " + rep.getCompanyName());
+                System.out.println("   Department: " + rep.getDepartment() + ", Position: " + rep.getPosition());
+                System.out.println("   User ID: " + rep.getId());
             }
             
             System.out.print("Select representative to review (number): ");
@@ -1181,6 +1221,8 @@ public class Main {
                 
                 String status = rep.getIsApproved() ? "APPROVED" : "PENDING";
                 System.out.println(rep.getName() + " (" + rep.getCompanyName() + "): " + status);
+                System.out.println("  Department: " + rep.getDepartment() + ", Position: " + rep.getPosition());
+                System.out.println("  User ID: " + rep.getId());
                 
                 if (rep.getIsApproved()) {
                     approved++;
@@ -1201,6 +1243,11 @@ public class Main {
             System.out.println("\n--- All Internship Opportunities ---");
             if (all.isEmpty()) {
                 System.out.println("No internships in the system.");
+            } else {
+                // Sort alphabetically and display
+                List<InternshipOpportunity> sorted = new ArrayList<>(all);
+                sorted.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
+                displayInternshipList(sorted);
             }
         }
 
