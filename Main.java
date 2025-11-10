@@ -239,11 +239,10 @@ public class Main {
         private void showStaffMenu() {
             System.out.println("1. Approve/Reject Internship Opportunities");
             System.out.println("2. Approve/Reject Company Representatives");
-            System.out.println("3. Review Applications");
-            System.out.println("4. Review Withdrawal Requests");
-            System.out.println("5. Generate Reports");
-            System.out.println("6. View All Internship Opportunities");
-            System.out.println("7. Change Password");
+            System.out.println("3. Review Withdrawal Requests");
+            System.out.println("4. Generate Reports");
+            System.out.println("5. View All Internship Opportunities");
+            System.out.println("6. Change Password");
         }
 
         private void handleStaffChoice(int choice) {
@@ -257,18 +256,15 @@ public class Main {
                     manageCompanyRepApprovals(staff);
                     break;
                 case 3:
-                    reviewApplications(staff);
-                    break;
-                case 4:
                     reviewWithdrawalRequests(staff);
                     break;
-                case 5:
+                case 4:
                     generateReports();
                     break;
-                case 6:
+                case 5:
                     viewAllInternships();
                     break;
-                case 7:
+                case 6:
                     handleChangePassword();
                     break;
                 default:
@@ -278,32 +274,24 @@ public class Main {
 
         private void browseInternshipsWithFilters(Student student) {
             System.out.println("\n--- Browse Internships ---");
+            System.out.println("Showing internships filtered by your profile (Year " + student.getYear() + ", " + student.getMajor() + ")");
             System.out.println("Filter by:");
-            System.out.println("1. All visible internships");
-            System.out.println("2. Filter by level");
-            System.out.println("3. Only open for application (within date range)");
+            System.out.println("1. All eligible internships (filtered by major, level, dates)");
+            System.out.println("2. Additional filter by level");
             System.out.print("Choose filter option: ");
             
             int filterChoice = getIntInput();
-            List<InternshipOpportunity> opportunities = new ArrayList<>(internshipController.getVisibleOpportunities());
+            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
             
-            switch (filterChoice) {
-                case 2:
-                    System.out.print("Enter level (BASIC/INTERMEDIATE/ADVANCED): ");
-                    String levelStr = scanner.nextLine().trim().toUpperCase();
-                    try {
-                        InternshipLevel level = InternshipLevel.valueOf(levelStr);
-                        opportunities = internshipController.filterByLevel(opportunities, level);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid level. Showing all.");
-                    }
-                    break;
-                case 3:
-                    opportunities = internshipController.getOpenOpportunities(java.time.LocalDate.now());
-                    break;
-                default:
-                    // Show all visible (case 1 or any other input)
-                    break;
+            if (filterChoice == 2) {
+                System.out.print("Enter level (BASIC/INTERMEDIATE/ADVANCED): ");
+                String levelStr = scanner.nextLine().trim().toUpperCase();
+                try {
+                    InternshipLevel level = InternshipLevel.valueOf(levelStr);
+                    opportunities = internshipController.filterByLevel(opportunities, level);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Invalid level. Showing all eligible internships.");
+                }
             }
             
             displayInternshipList(opportunities);
@@ -320,11 +308,21 @@ public class Main {
             for (InternshipOpportunity opp : opportunities) {
                 System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
                 System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                
+                // Display preferred major if set
+                if (opp.getPreferredMajor() != null && !opp.getPreferredMajor().isEmpty()) {
+                    System.out.println("   Preferred Major(s): " + String.join(", ", opp.getPreferredMajor()));
+                }
+                
+                // Display slots and remaining
                 System.out.println("   Slots: " + opp.getFilledSlots() + "/" + opp.getTotalSlots() + 
                                  " (Remaining: " + opp.remainingSlots() + ")");
+                
+                // Display application period
                 if (opp.getOpenDate() != null && opp.getCloseDate() != null) {
                     System.out.println("   Application Period: " + opp.getOpenDate() + " to " + opp.getCloseDate());
                 }
+                
                 index++;
             }
         }
@@ -355,28 +353,34 @@ public class Main {
         }
 
         private void applyForInternship(Student student) {
-            Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
+            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
             if (opportunities.isEmpty()) {
                 System.out.println("No internships available to apply for.");
+                System.out.println("Internships are filtered by your year, major, and eligibility.");
                 return;
             }
 
-            System.out.println("\n--- Available Internships ---");
-            InternshipOpportunity[] oppArray = opportunities.toArray(new InternshipOpportunity[0]);
-            for (int i = 0; i < oppArray.length; i++) {
-                System.out.println((i + 1) + ". " + oppArray[i].getTitle() + " - " + oppArray[i].getCompanyName());
+            System.out.println("\n--- Available Internships (Filtered for You) ---");
+            for (int i = 0; i < opportunities.size(); i++) {
+                InternshipOpportunity opp = opportunities.get(i);
+                System.out.println((i + 1) + ". " + opp.getTitle() + " - " + opp.getCompanyName());
+                System.out.println("   Level: " + opp.getLevel() + ", Remaining slots: " + opp.remainingSlots());
+                if (opp.getOpenDate() != null && opp.getCloseDate() != null) {
+                    System.out.println("   Application Period: " + opp.getOpenDate() + " to " + opp.getCloseDate());
+                }
             }
 
             System.out.print("Select internship number to apply: ");
             int choice = getIntInput();
             
-            if (choice > 0 && choice <= oppArray.length) {
-                InternshipOpportunity selected = oppArray[choice - 1];
+            if (choice > 0 && choice <= opportunities.size()) {
+                InternshipOpportunity selected = opportunities.get(choice - 1);
                 try {
                     Application app = new Application(student, selected);
                     student.addApplication(app);
                     applicationController.addApplication(app);
                     System.out.println("Application submitted successfully!");
+                    System.out.println("Status: PENDING - Awaiting company review");
                 } catch (ApplicationException e) {
                     System.out.println("Application failed: " + e.getMessage());
                 }
