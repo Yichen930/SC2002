@@ -136,8 +136,9 @@ public class Main {
             System.out.println("2. View My Applications");
             System.out.println("3. Apply for Internship");
             System.out.println("4. Accept Offer");
-            System.out.println("5. Withdraw Application");
-            System.out.println("6. Change Password");
+            System.out.println("5. Withdraw Application (Pre-Confirmation)");
+            System.out.println("6. Request Post-Confirmation Withdrawal");
+            System.out.println("7. Change Password");
         }
 
         private void handleStudentChoice(int choice) {
@@ -160,6 +161,9 @@ public class Main {
                     withdrawApplication(student);
                     break;
                 case 6:
+                    requestPostConfirmationWithdrawal(student);
+                    break;
+                case 7:
                     handleChangePassword();
                     break;
                 default:
@@ -219,8 +223,9 @@ public class Main {
             System.out.println("1. Approve/Reject Internship Opportunities");
             System.out.println("2. Approve/Reject Company Representatives");
             System.out.println("3. Review Applications");
-            System.out.println("4. View All Internship Opportunities");
-            System.out.println("5. Change Password");
+            System.out.println("4. Review Withdrawal Requests");
+            System.out.println("5. View All Internship Opportunities");
+            System.out.println("6. Change Password");
         }
 
         private void handleStaffChoice(int choice) {
@@ -237,9 +242,12 @@ public class Main {
                     reviewApplications(staff);
                     break;
                 case 4:
-                    viewAllInternships();
+                    reviewWithdrawalRequests(staff);
                     break;
                 case 5:
+                    viewAllInternships();
+                    break;
+                case 6:
                     handleChangePassword();
                     break;
                 default:
@@ -413,6 +421,60 @@ public class Main {
                 Application selected = activeApps.get(choice - 1);
                 selected.setStatus(ApplicationStatus.WITHDRAWN);
                 System.out.println("Application withdrawn successfully.");
+            } else {
+                System.out.println("Invalid selection.");
+            }
+        }
+
+        private void requestPostConfirmationWithdrawal(Student student) {
+            // Find accepted/confirmed applications
+            List<Application> confirmedApps = new ArrayList<>();
+            for (Application app : student.getApplications()) {
+                if (app.getStatus() == ApplicationStatus.ACCEPTED) {
+                    confirmedApps.add(app);
+                }
+            }
+
+            if (confirmedApps.isEmpty()) {
+                System.out.println("You have no confirmed applications to request withdrawal from.");
+                return;
+            }
+
+            System.out.println("\n--- Your Confirmed Applications ---");
+            for (int i = 0; i < confirmedApps.size(); i++) {
+                Application app = confirmedApps.get(i);
+                System.out.println((i + 1) + ". " + app.getOpportunity().getTitle() + 
+                                 " - " + app.getOpportunity().getCompanyName());
+                if (app.getWithdrawal() != null) {
+                    System.out.println("   Withdrawal Status: " + app.getWithdrawal().getStatus());
+                }
+            }
+
+            System.out.print("Select application to request withdrawal (number): ");
+            int choice = getIntInput();
+
+            if (choice > 0 && choice <= confirmedApps.size()) {
+                Application selected = confirmedApps.get(choice - 1);
+                
+                // Check if already has a pending withdrawal request
+                if (selected.getWithdrawal() != null) {
+                    System.out.println("A withdrawal request already exists for this application.");
+                    System.out.println("Status: " + selected.getWithdrawal().getStatus());
+                    return;
+                }
+
+                System.out.print("Enter reason for withdrawal: ");
+                String reason = scanner.nextLine().trim();
+                
+                if (reason.isEmpty()) {
+                    System.out.println("Reason cannot be empty.");
+                    return;
+                }
+
+                applicationController.requestForWithdrawal(selected);
+                selected.getWithdrawal().setWithdrawalReason(reason);
+                System.out.println("Withdrawal request submitted successfully.");
+                System.out.println("Staff will review your request.");
             } else {
                 System.out.println("Invalid selection.");
             }
@@ -755,6 +817,64 @@ public class Main {
                 } catch (IllegalArgumentException e) {
                     System.out.println("Invalid decision.");
                 }
+            }
+        }
+
+        private void reviewWithdrawalRequests(CareerCenterStaff staff) {
+            List<Application> allApplications = applicationController.getAllApplications();
+            List<Application> pendingWithdrawals = new ArrayList<>();
+            
+            for (Application app : allApplications) {
+                if (app.getWithdrawal() != null && 
+                    app.getWithdrawal().getStatus() == WithdrawalStatus.PENDING) {
+                    pendingWithdrawals.add(app);
+                }
+            }
+            
+            if (pendingWithdrawals.isEmpty()) {
+                System.out.println("No pending withdrawal requests.");
+                return;
+            }
+            
+            System.out.println("\n--- Pending Withdrawal Requests ---");
+            for (int i = 0; i < pendingWithdrawals.size(); i++) {
+                Application app = pendingWithdrawals.get(i);
+                WithdrawalRequest wr = app.getWithdrawal();
+                System.out.println((i + 1) + ". Student: " + app.getStudent().getName());
+                System.out.println("   Internship: " + app.getOpportunity().getTitle());
+                System.out.println("   Company: " + app.getOpportunity().getCompanyName());
+                System.out.println("   Reason: " + wr.getWithdrawalReason());
+                System.out.println("   Request Date: " + wr.getRequestDate());
+            }
+            
+            System.out.print("Select withdrawal request to review (number): ");
+            int choice = getIntInput();
+            
+            if (choice > 0 && choice <= pendingWithdrawals.size()) {
+                Application selected = pendingWithdrawals.get(choice - 1);
+                System.out.print("Decision (APPROVE/REJECT): ");
+                String decisionStr = scanner.nextLine().trim().toUpperCase();
+                
+                WithdrawalStatus decision;
+                if (decisionStr.equals("APPROVE")) {
+                    decision = WithdrawalStatus.APPROVED;
+                } else if (decisionStr.equals("REJECT")) {
+                    decision = WithdrawalStatus.REJECTED;
+                } else {
+                    System.out.println("Invalid decision.");
+                    return;
+                }
+                
+                applicationController.decideWithdrawal(staff, selected, decision);
+                
+                if (decision == WithdrawalStatus.APPROVED) {
+                    System.out.println("Withdrawal approved. Application marked as WITHDRAWN.");
+                    System.out.println("Slot has been freed on the internship.");
+                } else {
+                    System.out.println("Withdrawal rejected. Application status unchanged.");
+                }
+            } else {
+                System.out.println("Invalid selection.");
             }
         }
 

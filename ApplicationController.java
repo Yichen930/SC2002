@@ -83,6 +83,8 @@ public class ApplicationController {
             withdrawal.decide(staff, decision);
             if (decision == WithdrawalStatus.APPROVED) {
                 app.setStatus(ApplicationStatus.WITHDRAWN);
+                // Free the slot on the internship
+                app.getOpportunity().freeSlot();
             }
         }
     }
