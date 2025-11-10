@@ -68,18 +68,18 @@ public class Main {
         }
 
         private void handleLogin() {
-            System.out.print("Enter username (name): ");
-            String username = scanner.nextLine().trim();
+            System.out.print("Enter User ID (e.g., U2345123F, john@techcorp.com, admin@ntu.edu.sg): ");
+            String userId = scanner.nextLine().trim();
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
-            if (username.isEmpty() || password.isEmpty()) {
-                System.out.println("Username and password cannot be empty.");
+            if (userId.isEmpty() || password.isEmpty()) {
+                System.out.println("User ID and password cannot be empty.");
                 return;
             }
 
             try {
-                currentUser = authController.authenticate(username, password);
+                currentUser = authController.authenticate(userId, password);
                 if (currentUser != null) {
                     System.out.println("Login successful! Welcome, " + currentUser.getName() + "!");
                 } else {
@@ -91,24 +91,31 @@ public class Main {
         }
 
         private void handleRegisterCompanyRep() {
+            System.out.print("Enter your name: ");
+            String name = scanner.nextLine().trim();
+            System.out.print("Enter company email (this will be your User ID): ");
+            String email = scanner.nextLine().trim();
             System.out.print("Enter company name: ");
             String companyName = scanner.nextLine().trim();
-            System.out.print("Enter email: ");
-            String email = scanner.nextLine().trim();
+            System.out.print("Enter department: ");
+            String department = scanner.nextLine().trim();
+            System.out.print("Enter position: ");
+            String position = scanner.nextLine().trim();
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
-            if (companyName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                System.out.println("All fields are required.");
+            if (name.isEmpty() || email.isEmpty() || companyName.isEmpty() || password.isEmpty()) {
+                System.out.println("Name, email, company name, and password are required.");
                 return;
             }
 
-            boolean success = registrationController.registerCompanyRepresentative(companyName, email, password);
+            boolean success = registrationController.registerCompanyRepresentative(name, email, companyName, department, position, password);
             if (success) {
                 System.out.println("Company representative registered successfully!");
-                System.out.println("Note: Your account needs to be approved by Career Center Staff.");
+                System.out.println("Your User ID is: " + email);
+                System.out.println("Note: Your account needs to be approved by Career Center Staff before you can create internships.");
             } else {
-                System.out.println("Registration failed. Company may already be registered.");
+                System.out.println("Registration failed. Email may already be registered.");
             }
         }
 
@@ -1277,9 +1284,9 @@ public class Main {
                 System.out.println("- Loaded " + internships.size() + " internships");
                 System.out.println("- Loaded " + applications.size() + " applications");
                 System.out.println("\nSample Login Credentials:");
-                System.out.println("- Student: Alice (password: password)");
-                System.out.println("- Company Rep: John (password: password)");
-                System.out.println("- Staff: Admin (password: password)");
+                System.out.println("- Student: U2345123F (Alice, password: password)");
+                System.out.println("- Company Rep: john@techcorp.com (John Smith, password: password)");
+                System.out.println("- Staff: admin@ntu.edu.sg (Admin, password: password)");
                 
             } catch (DataAccessException e) {
                 System.out.println("Warning: Could not load data from files: " + e.getMessage());

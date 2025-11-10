@@ -1,14 +1,13 @@
 # User Data File
 # Format: TYPE|ID|NAME|PASSWORD|ROLE_SPECIFIC_FIELDS
 # STUDENT: TYPE|ID|NAME|PASSWORD|MAJOR|YEAR
-# COMPANY_REP: TYPE|ID|NAME|PASSWORD|COMPANY_NAME|IS_APPROVED
+# COMPANY_REP: TYPE|ID|NAME|PASSWORD|COMPANY_NAME|DEPARTMENT|POSITION|IS_APPROVED
 # STAFF: TYPE|ID|NAME|PASSWORD|DEPARTMENT
 
-STUDENT|STU001|Alice|password|Computer Science|2
-STUDENT|STU002|Bob|password|Engineering|3
-STUDENT|STU003|Charlie|password|Business|1
-STUDENT|STU004|Diana|password|Computer Science|4
-COMPANY_REP|REP001|John|password|Tech Corp|true
-COMPANY_REP|REP002|Jane|password|StartupCo|false
-STAFF|STAFF001|Admin|password|Career Services
-
+STUDENT|U2345123F|Alice|password|Computer Science|2
+STUDENT|U3456234G|Bob|password|Engineering|3
+STUDENT|U1234567A|Charlie|password|Business|1
+STUDENT|U4567890D|Diana|password|Computer Science|4
+COMPANY_REP|john@techcorp.com|John Smith|password|Tech Corp|Engineering|Senior Recruiter|true
+COMPANY_REP|jane@startupco.com|Jane Doe|password|StartupCo|HR|Talent Acquisition|false
+STAFF|admin@ntu.edu.sg|Admin|password|Career Services

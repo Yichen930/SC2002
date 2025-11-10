@@ -45,10 +45,14 @@ public class DataManager {
                     String major = parts[4].trim();
                     int year = Integer.parseInt(parts[5].trim());
                     user = new Student(id, name, major, year);
-                } else if (type.equals("COMPANY_REP") && parts.length >= 6) {
+                } else if (type.equals("COMPANY_REP") && parts.length >= 8) {
                     String companyName = parts[4].trim();
-                    boolean isApproved = Boolean.parseBoolean(parts[5].trim());
+                    String department = parts[5].trim();
+                    String position = parts[6].trim();
+                    boolean isApproved = Boolean.parseBoolean(parts[7].trim());
                     CompanyRepresentative rep = new CompanyRepresentative(id, name, companyName);
+                    rep.setDepartment(department);
+                    rep.setPosition(position);
                     rep.setApproved(isApproved);
                     user = rep;
                 } else if (type.equals("STAFF") && parts.length >= 5) {
@@ -134,7 +138,7 @@ public class DataManager {
                 }
                 
                 String[] parts = line.split("\\|");
-                if (parts.length < 12) {
+                if (parts.length < 13) {
                     continue;
                 }
                 
@@ -144,12 +148,13 @@ public class DataManager {
                 String repId = parts[3].trim();
                 String description = parts[4].trim();
                 String levelStr = parts[5].trim();
-                int totalSlots = Integer.parseInt(parts[6].trim());
-                int filledSlots = Integer.parseInt(parts[7].trim());
-                String statusStr = parts[8].trim();
-                boolean visible = Boolean.parseBoolean(parts[9].trim());
-                String openDateStr = parts[10].trim();
-                String closeDateStr = parts[11].trim();
+                String preferredMajor = parts[6].trim();
+                int totalSlots = Integer.parseInt(parts[7].trim());
+                int filledSlots = Integer.parseInt(parts[8].trim());
+                String statusStr = parts[9].trim();
+                boolean visible = Boolean.parseBoolean(parts[10].trim());
+                String openDateStr = parts[11].trim();
+                String closeDateStr = parts[12].trim();
                 
                 // Find the rep
                 CompanyRepresentative rep = null;
@@ -167,6 +172,16 @@ public class DataManager {
                 InternshipOpportunity opp = new InternshipOpportunity(title, companyName, rep);
                 opp.setDescription(description);
                 opp.setLevel(InternshipLevel.valueOf(levelStr));
+                
+                // Set preferred major (can be comma-separated for multiple majors)
+                if (preferredMajor != null && !preferredMajor.isEmpty() && !preferredMajor.equalsIgnoreCase("N/A")) {
+                    List<String> majors = new ArrayList<>();
+                    for (String major : preferredMajor.split(",")) {
+                        majors.add(major.trim());
+                    }
+                    opp.setPreferredMajor(majors);
+                }
+                
                 opp.setTotalSlots(totalSlots);
                 opp.setFilledSlots(filledSlots);
                 opp.setStatus(InternshipStatus.valueOf(statusStr));
