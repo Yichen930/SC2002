@@ -192,10 +192,12 @@ public class Main {
             CompanyRepresentative rep = (CompanyRepresentative) currentUser;
             System.out.println("1. Create Internship Opportunity");
             System.out.println("2. View My Created Internships");
-            System.out.println("3. Edit Internship");
-            System.out.println("4. Delete Internship");
-            System.out.println("5. Toggle Internship Visibility");
-            System.out.println("6. Change Password");
+            System.out.println("3. View Applications for My Internships");
+            System.out.println("4. Review Student Applications");
+            System.out.println("5. Edit Internship");
+            System.out.println("6. Delete Internship");
+            System.out.println("7. Toggle Internship Visibility");
+            System.out.println("8. Change Password");
             
             if (!rep.getIsApproved()) {
                 System.out.println("\n Note: Your account is pending approval.");
@@ -220,15 +222,21 @@ public class Main {
                     viewCreatedInternships(rep);
                     break;
                 case 3:
-                    editInternship(rep);
+                    viewApplicationsForMyInternships(rep);
                     break;
                 case 4:
-                    deleteInternship(rep);
+                    reviewStudentApplications(rep);
                     break;
                 case 5:
-                    toggleInternshipVisibility(rep);
+                    editInternship(rep);
                     break;
                 case 6:
+                    deleteInternship(rep);
+                    break;
+                case 7:
+                    toggleInternshipVisibility(rep);
+                    break;
+                case 8:
                     handleChangePassword();
                     break;
                 default:
@@ -676,6 +684,118 @@ public class Main {
                 }
             } else {
                 System.out.println("Invalid selection.");
+            }
+        }
+
+        private void viewApplicationsForMyInternships(CompanyRepresentative rep) {
+            if (rep == null) {
+                System.out.println("Error: Representative not found.");
+                return;
+            }
+
+            List<InternshipOpportunity> myInternships = rep.getCreatedInternships();
+            if (myInternships.isEmpty()) {
+                System.out.println("You have not created any internships yet.");
+                return;
+            }
+
+            List<Application> allApplications = applicationController.getAllApplications();
+            boolean hasApplications = false;
+
+            System.out.println("\n=== Applications for My Internships ===");
+            
+            for (InternshipOpportunity opp : myInternships) {
+                List<Application> oppApplications = new ArrayList<>();
+                
+                for (Application app : allApplications) {
+                    if (app != null && app.getOpportunity() != null && 
+                        app.getOpportunity().equals(opp)) {
+                        oppApplications.add(app);
+                    }
+                }
+                
+                if (!oppApplications.isEmpty()) {
+                    hasApplications = true;
+                    System.out.println("\n" + opp.getTitle() + " (" + opp.getStatus() + ")");
+                    System.out.println("  Total Applications: " + oppApplications.size());
+                    
+                    for (int i = 0; i < oppApplications.size(); i++) {
+                        Application app = oppApplications.get(i);
+                        Student student = app.getStudent();
+                        System.out.println("  " + (i + 1) + ". " + student.getName() + 
+                                         " (Year " + student.getYear() + ", " + student.getMajor() + ")");
+                        System.out.println("     Status: " + app.getStatus());
+                    }
+                }
+            }
+            
+            if (!hasApplications) {
+                System.out.println("No applications received yet for your internships.");
+            }
+            System.out.println("=====================================");
+        }
+
+        private void reviewStudentApplications(CompanyRepresentative rep) {
+            if (rep == null) {
+                System.out.println("Error: Representative not found.");
+                return;
+            }
+
+            List<InternshipOpportunity> myInternships = rep.getCreatedInternships();
+            List<Application> allApplications = applicationController.getAllApplications();
+            List<Application> pendingApplications = new ArrayList<>();
+            
+            // Find pending applications for this rep's internships
+            for (Application app : allApplications) {
+                if (app != null && app.getStatus() == ApplicationStatus.PENDING &&
+                    app.getOpportunity() != null) {
+                    
+                    // Check if this application is for one of rep's internships
+                    for (InternshipOpportunity opp : myInternships) {
+                        if (opp.equals(app.getOpportunity())) {
+                            pendingApplications.add(app);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (pendingApplications.isEmpty()) {
+                System.out.println("No pending applications to review.");
+                return;
+            }
+            
+            System.out.println("\n--- Pending Student Applications ---");
+            for (int i = 0; i < pendingApplications.size(); i++) {
+                Application app = pendingApplications.get(i);
+                Student student = app.getStudent();
+                System.out.println((i + 1) + ". " + student.getName() + 
+                                 " (Year " + student.getYear() + ", " + student.getMajor() + ")");
+                System.out.println("   Applied for: " + app.getOpportunity().getTitle());
+                System.out.println("   Student ID: " + student.getId());
+            }
+            
+            System.out.print("Select application to review (number): ");
+            int choice = getIntInput();
+            
+            if (choice > 0 && choice <= pendingApplications.size()) {
+                Application selected = pendingApplications.get(choice - 1);
+                System.out.print("Decision (APPROVE/REJECT): ");
+                String decisionStr = scanner.nextLine().trim().toUpperCase();
+                
+                if (decisionStr.equals("APPROVE")) {
+                    selected.setStatus(ApplicationStatus.ACCEPTED);
+                    System.out.println("Application approved!");
+                    System.out.println("Student's application status is now 'Successful'.");
+                    System.out.println("Student can now accept the placement confirmation.");
+                } else if (decisionStr.equals("REJECT")) {
+                    selected.setStatus(ApplicationStatus.REJECTED);
+                    System.out.println("Application rejected.");
+                } else {
+                    System.out.println("Invalid decision. Please enter 'APPROVE' or 'REJECT'.");
+                }
+            } else {
+                System.out.println("Invalid selection. Please enter a number between 1 and " + pendingApplications.size());
             }
         }
 
