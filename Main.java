@@ -152,7 +152,7 @@ public class Main {
             System.out.println("1. Browse Internships (with filters)");
             System.out.println("2. View My Applications");
             System.out.println("3. Apply for Internship");
-            System.out.println("4. Accept Offer");
+            System.out.println("4. Accept Placement Confirmation");
             System.out.println("5. Withdraw Application (Pre-Confirmation)");
             System.out.println("6. Request Post-Confirmation Withdrawal");
             System.out.println("7. Change Password");
@@ -172,7 +172,7 @@ public class Main {
                     applyForInternship(student);
                     break;
                 case 4:
-                    acceptOffer(student);
+                    acceptPlacementConfirmation(student);
                     break;
                 case 5:
                     withdrawApplication(student);
@@ -397,30 +397,34 @@ public class Main {
             }
         }
 
-        private void acceptOffer(Student student) {
+        private void acceptPlacementConfirmation(Student student) {
             List<Application> acceptedApps = student.getSuccessfulApplications();
             if (acceptedApps.isEmpty()) {
-                System.out.println("You have no offers to accept.");
+                System.out.println("You have no approved applications awaiting your confirmation.");
+                System.out.println("Applications must be approved by the company representative first.");
                 return;
             }
 
-            System.out.println("\n--- Your Offers ---");
+            System.out.println("\n--- Applications Approved by Company (Awaiting Your Confirmation) ---");
             for (int i = 0; i < acceptedApps.size(); i++) {
                 Application app = acceptedApps.get(i);
                 System.out.println((i + 1) + ". " + app.getOpportunity().getTitle() + 
                                  " - " + app.getOpportunity().getCompanyName());
+                System.out.println("   Status: Approved by company - Awaiting your acceptance");
             }
 
-            System.out.print("Select offer to accept (number): ");
+            System.out.print("Select placement to confirm (number): ");
             int choice = getIntInput();
 
             if (choice > 0 && choice <= acceptedApps.size()) {
                 Application selected = acceptedApps.get(choice - 1);
                 try {
                     applicationController.accept(student, selected);
-                    System.out.println("Offer accepted! All other applications have been withdrawn.");
+                    System.out.println("\n✓ Placement confirmed successfully!");
+                    System.out.println("Your internship placement is now finalized.");
+                    System.out.println("All other applications have been automatically withdrawn.");
                 } catch (ApplicationException e) {
-                    System.out.println("Failed to accept offer: " + e.getMessage());
+                    System.out.println("Failed to confirm placement: " + e.getMessage());
                 }
             } else {
                 System.out.println("Invalid selection.");
