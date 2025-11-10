@@ -15,6 +15,9 @@ public abstract class User {
         this.name = name;
     }
     public boolean changePassword(String oldPassword, String newPassword) {
+        if (oldPassword == null || newPassword == null) {
+            return false;
+        }
         if (oldPassword.equals(password)) {
             password = newPassword;
             return true;
@@ -23,10 +26,26 @@ public abstract class User {
     }
 
     public boolean verifyPassword(String inputPassword) {
+        if (inputPassword == null) {
+            return false;
+        }
         return password.equals(inputPassword);
     }
 
     public void setPassword(String newPassword) {
         this.password = newPassword;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

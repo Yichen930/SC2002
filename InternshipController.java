@@ -2,6 +2,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 public class InternshipController {
     private List<InternshipOpportunity> opportunities;
@@ -90,6 +91,114 @@ public class InternshipController {
 
     public List<InternshipOpportunity> getAllOpportunities() {
         return new ArrayList<>(opportunities);
+    }
+
+    public List<InternshipOpportunity> getOpenOpportunities(LocalDate today) {
+        List<InternshipOpportunity> open = new ArrayList<>();
+        for (InternshipOpportunity opp : opportunities) {
+            if (opp != null && opp.isOpenForApplication(today)) {
+                open.add(opp);
+            }
+        }
+        return open;
+    }
+
+    public List<InternshipOpportunity> filterByLevel(List<InternshipOpportunity> opps, InternshipLevel level) {
+        if (level == null) return opps;
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        for (InternshipOpportunity opp : opps) {
+            if (opp != null && opp.getLevel() == level) {
+                filtered.add(opp);
+            }
+        }
+        return filtered;
+    }
+
+    public List<InternshipOpportunity> filterByDateRange(List<InternshipOpportunity> opps, LocalDate today) {
+        if (today == null) return opps;
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        for (InternshipOpportunity opp : opps) {
+            if (opp != null && opp.getOpenDate() != null && opp.getCloseDate() != null) {
+                if (!today.isBefore(opp.getOpenDate()) && !today.isAfter(opp.getCloseDate())) {
+                    filtered.add(opp);
+                }
+            }
+        }
+        return filtered;
+    }
+
+    public List<InternshipOpportunity> filterVisible(List<InternshipOpportunity> opps) {
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        for (InternshipOpportunity opp : opps) {
+            if (opp != null && opp.isVisible() && opp.getStatus() == InternshipStatus.APPROVED) {
+                filtered.add(opp);
+            }
+        }
+        return filtered;
+    }
+
+    public boolean deleteOpportunity(CompanyRepresentative rep, InternshipOpportunity opp) {
+        if (rep == null || opp == null) {
+            return false;
+        }
+        
+        // Can only delete if not yet approved
+        if (opp.getStatus() != InternshipStatus.PENDING) {
+            return false;
+        }
+        
+        // Verify ownership
+        if (!opp.getRepInCharge().equals(rep)) {
+            return false;
+        }
+        
+        opportunities.remove(opp);
+        rep.removeInternship(opp);
+        return true;
+    }
+
+    public void removeOpportunity(InternshipOpportunity opp) {
+        opportunities.remove(opp);
+    }
+
+    public List<InternshipOpportunity> getFilteredOpportunities(Student student) {
+        if (student == null) {
+            return new ArrayList<>();
+        }
+
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        
+        for (InternshipOpportunity opp : opportunities) {
+            // Skip null entries
+            if (opp == null) continue;
+            
+            // Check if visible
+            if (!opp.isVisible()) continue;
+            
+            // Status must be approved
+            if (opp.getStatus() != InternshipStatus.APPROVED) continue;
+            
+            // Date must be within range
+            if (opp.getOpenDate() == null || opp.getCloseDate() == null) continue;
+            if (today.isBefore(opp.getOpenDate()) || today.isAfter(opp.getCloseDate())) continue;
+            
+            // Must not be filled
+            if (opp.isFilled()) continue;
+            
+            // Level eligibility (Year 1-2 can only see BASIC)
+            if (!student.canApplyForLevel(opp.getLevel())) continue;
+            
+            // Preferred major filter (if set, only students with matching major can see it)
+            List<String> preferred = opp.getPreferredMajor();
+            if (preferred != null && !preferred.isEmpty() && !preferred.contains(student.getMajor())) {
+                continue;
+            }
+
+            filtered.add(opp);
+        }
+        
+        return filtered;
     }
 }
 
