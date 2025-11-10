@@ -54,4 +54,25 @@ public class CompanyRepresentative extends User {
         if (draft == null) return;
         createdInternships.add(draft);
     }
+
+    public long countActiveInternships() {
+        int count = 0;
+        for (InternshipOpportunity opp : createdInternships) {
+            if (opp != null && 
+                opp.getStatus() == InternshipStatus.APPROVED && 
+                opp.isVisible() && 
+                !opp.isFilled()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public boolean canCreateMoreInternships() {
+        return countActiveInternships() < 5;
+    }
+
+    public void removeInternship(InternshipOpportunity opp) {
+        createdInternships.remove(opp);
+    }
 }

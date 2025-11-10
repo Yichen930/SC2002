@@ -171,11 +171,17 @@ public class Main {
             CompanyRepresentative rep = (CompanyRepresentative) currentUser;
             System.out.println("1. Create Internship Opportunity");
             System.out.println("2. View My Created Internships");
-            System.out.println("3. Change Password");
+            System.out.println("3. Edit Internship");
+            System.out.println("4. Delete Internship");
+            System.out.println("5. Toggle Internship Visibility");
+            System.out.println("6. Change Password");
             
             if (!rep.getIsApproved()) {
-                System.out.println("\n⚠️  Note: Your account is pending approval.");
+                System.out.println("\n Note: Your account is pending approval.");
             }
+            
+            long activeCount = rep.countActiveInternships();
+            System.out.println("Active internships: " + activeCount + "/5");
         }
 
         private void handleCompanyRepChoice(int choice) {
@@ -193,6 +199,15 @@ public class Main {
                     viewCreatedInternships(rep);
                     break;
                 case 3:
+                    editInternship(rep);
+                    break;
+                case 4:
+                    deleteInternship(rep);
+                    break;
+                case 5:
+                    toggleInternshipVisibility(rep);
+                    break;
+                case 6:
                     handleChangePassword();
                     break;
                 default:
@@ -404,6 +419,13 @@ public class Main {
         }
 
         private void createInternship(CompanyRepresentative rep) {
+            // Check 5 active internships limit
+            if (!rep.canCreateMoreInternships()) {
+                System.out.println("You have reached the maximum of 5 active internships.");
+                System.out.println("Please delete or wait for some to be filled before creating new ones.");
+                return;
+            }
+            
             System.out.println("\n--- Create Internship Opportunity ---");
             System.out.print("Enter internship title: ");
             String title = scanner.nextLine().trim();
@@ -427,6 +449,24 @@ public class Main {
             int slots = getIntInput();
             opp.setTotalSlots(slots);
             
+            System.out.print("Enter open date (YYYY-MM-DD): ");
+            String openDateStr = scanner.nextLine().trim();
+            try {
+                opp.setOpenDate(java.time.LocalDate.parse(openDateStr));
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Setting to today.");
+                opp.setOpenDate(java.time.LocalDate.now());
+            }
+            
+            System.out.print("Enter close date (YYYY-MM-DD): ");
+            String closeDateStr = scanner.nextLine().trim();
+            try {
+                opp.setCloseDate(java.time.LocalDate.parse(closeDateStr));
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Setting to 1 year from today.");
+                opp.setCloseDate(java.time.LocalDate.now().plusYears(1));
+            }
+            
             // Add the opportunity directly (staff approval will happen later)
             internshipController.addOpportunity(opp);
             rep.createInternship(opp);
@@ -443,8 +483,156 @@ public class Main {
                 for (InternshipOpportunity opp : internships) {
                     System.out.println(index + ". " + opp.getTitle());
                     System.out.println("   Status: " + opp.getStatus() + ", Visible: " + opp.isVisible());
+                    System.out.println("   Slots: " + opp.getFilledSlots() + "/" + opp.getTotalSlots());
                     index++;
                 }
+            }
+        }
+
+        private void editInternship(CompanyRepresentative rep) {
+            List<InternshipOpportunity> internships = rep.getCreatedInternships();
+            List<InternshipOpportunity> editable = new ArrayList<>();
+            
+            for (InternshipOpportunity opp : internships) {
+                if (opp.getStatus() == InternshipStatus.PENDING) {
+                    editable.add(opp);
+                }
+            }
+            
+            if (editable.isEmpty()) {
+                System.out.println("No pending internships to edit.");
+                return;
+            }
+            
+            System.out.println("\n--- Editable Internships (Pending Only) ---");
+            for (int i = 0; i < editable.size(); i++) {
+                System.out.println((i + 1) + ". " + editable.get(i).getTitle());
+            }
+            
+            System.out.print("Select internship to edit (number): ");
+            int choice = getIntInput();
+            
+            if (choice > 0 && choice <= editable.size()) {
+                InternshipOpportunity selected = editable.get(choice - 1);
+                
+                System.out.print("New title (press enter to keep current): ");
+                String title = scanner.nextLine().trim();
+                if (!title.isEmpty()) {
+                    selected.setTitle(title);
+                }
+                
+                System.out.print("New description (press enter to keep current): ");
+                String desc = scanner.nextLine().trim();
+                if (!desc.isEmpty()) {
+                    selected.setDescription(desc);
+                }
+                
+                System.out.print("New level (BASIC/INTERMEDIATE/ADVANCED, press enter to keep current): ");
+                String levelStr = scanner.nextLine().trim().toUpperCase();
+                if (!levelStr.isEmpty()) {
+                    try {
+                        selected.setLevel(InternshipLevel.valueOf(levelStr));
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid level. Keeping current.");
+                    }
+                }
+                
+                System.out.print("New total slots (0 to keep current): ");
+                int slots = getIntInput();
+                if (slots > 0) {
+                    selected.setTotalSlots(slots);
+                }
+                
+                System.out.println("Internship updated successfully!");
+            } else {
+                System.out.println("Invalid selection.");
+            }
+        }
+
+        private void deleteInternship(CompanyRepresentative rep) {
+            List<InternshipOpportunity> internships = rep.getCreatedInternships();
+            List<InternshipOpportunity> deletable = new ArrayList<>();
+            
+            for (InternshipOpportunity opp : internships) {
+                if (opp.getStatus() == InternshipStatus.PENDING) {
+                    deletable.add(opp);
+                }
+            }
+            
+            if (deletable.isEmpty()) {
+                System.out.println("No pending internships to delete.");
+                return;
+            }
+            
+            System.out.println("\n--- Deletable Internships (Pending Only) ---");
+            for (int i = 0; i < deletable.size(); i++) {
+                System.out.println((i + 1) + ". " + deletable.get(i).getTitle());
+            }
+            
+            System.out.print("Select internship to delete (number): ");
+            int choice = getIntInput();
+            
+            if (choice > 0 && choice <= deletable.size()) {
+                InternshipOpportunity selected = deletable.get(choice - 1);
+                System.out.print("Are you sure you want to delete '" + selected.getTitle() + "'? (yes/no): ");
+                String confirm = scanner.nextLine().trim().toLowerCase();
+                
+                if (confirm.equals("yes")) {
+                    boolean deleted = internshipController.deleteOpportunity(rep, selected);
+                    if (deleted) {
+                        System.out.println("Internship deleted successfully!");
+                    } else {
+                        System.out.println("Failed to delete internship.");
+                    }
+                } else {
+                    System.out.println("Deletion cancelled.");
+                }
+            } else {
+                System.out.println("Invalid selection.");
+            }
+        }
+
+        private void toggleInternshipVisibility(CompanyRepresentative rep) {
+            List<InternshipOpportunity> internships = rep.getCreatedInternships();
+            List<InternshipOpportunity> toggleable = new ArrayList<>();
+            
+            for (InternshipOpportunity opp : internships) {
+                if (opp.getStatus() == InternshipStatus.APPROVED) {
+                    toggleable.add(opp);
+                }
+            }
+            
+            if (toggleable.isEmpty()) {
+                System.out.println("No approved internships to toggle visibility.");
+                return;
+            }
+            
+            System.out.println("\n--- Approved Internships ---");
+            for (int i = 0; i < toggleable.size(); i++) {
+                InternshipOpportunity opp = toggleable.get(i);
+                System.out.println((i + 1) + ". " + opp.getTitle() + " - Visible: " + opp.isVisible());
+            }
+            
+            System.out.print("Select internship to toggle visibility (number): ");
+            int choice = getIntInput();
+            
+            if (choice > 0 && choice <= toggleable.size()) {
+                InternshipOpportunity selected = toggleable.get(choice - 1);
+                
+                // If making visible, check the 5 active limit
+                if (!selected.isVisible() && !rep.canCreateMoreInternships()) {
+                    System.out.println("Cannot make visible: You have reached the maximum of 5 active internships.");
+                    return;
+                }
+                
+                try {
+                    internshipController.toggleVisibility(selected);
+                    System.out.println("Visibility toggled! Now: " + (selected.isVisible() ? "Visible" : "Hidden"));
+                } catch (IllegalStateException e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Invalid selection.");
             }
         }
 

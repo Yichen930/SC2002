@@ -136,5 +136,29 @@ public class InternshipController {
         }
         return filtered;
     }
+
+    public boolean deleteOpportunity(CompanyRepresentative rep, InternshipOpportunity opp) {
+        if (rep == null || opp == null) {
+            return false;
+        }
+        
+        // Can only delete if not yet approved
+        if (opp.getStatus() != InternshipStatus.PENDING) {
+            return false;
+        }
+        
+        // Verify ownership
+        if (!opp.getRepInCharge().equals(rep)) {
+            return false;
+        }
+        
+        opportunities.remove(opp);
+        rep.removeInternship(opp);
+        return true;
+    }
+
+    public void removeOpportunity(InternshipOpportunity opp) {
+        opportunities.remove(opp);
+    }
 }
 
