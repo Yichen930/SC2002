@@ -160,5 +160,45 @@ public class InternshipController {
     public void removeOpportunity(InternshipOpportunity opp) {
         opportunities.remove(opp);
     }
+
+    public List<InternshipOpportunity> getFilteredOpportunities(Student student) {
+        if (student == null) {
+            return new ArrayList<>();
+        }
+
+        List<InternshipOpportunity> filtered = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        
+        for (InternshipOpportunity opp : opportunities) {
+            // Skip null entries
+            if (opp == null) continue;
+            
+            // Check if visible
+            if (!opp.isVisible()) continue;
+            
+            // Status must be approved
+            if (opp.getStatus() != InternshipStatus.APPROVED) continue;
+            
+            // Date must be within range
+            if (opp.getOpenDate() == null || opp.getCloseDate() == null) continue;
+            if (today.isBefore(opp.getOpenDate()) || today.isAfter(opp.getCloseDate())) continue;
+            
+            // Must not be filled
+            if (opp.isFilled()) continue;
+            
+            // Level eligibility (Year 1-2 can only see BASIC)
+            if (!student.canApplyForLevel(opp.getLevel())) continue;
+            
+            // Preferred major filter (if set, only students with matching major can see it)
+            List<String> preferred = opp.getPreferredMajor();
+            if (preferred != null && !preferred.isEmpty() && !preferred.contains(student.getMajor())) {
+                continue;
+            }
+
+            filtered.add(opp);
+        }
+        
+        return filtered;
+    }
 }
 
