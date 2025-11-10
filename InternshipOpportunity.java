@@ -126,10 +126,13 @@ public class InternshipOpportunity {
 
 
     public boolean isOpenForApplication(LocalDate today) {
-        return status == InternshipStatus.APPROVED && 
-               visible && 
-               today != null &&
-               !today.isBefore(openDate) && 
+        if (status != InternshipStatus.APPROVED || !visible || today == null) {
+            return false;
+        }
+        if (openDate == null || closeDate == null) {
+            return false;
+        }
+        return !today.isBefore(openDate) && 
                !today.isAfter(closeDate) &&
                !isFilled();
     }

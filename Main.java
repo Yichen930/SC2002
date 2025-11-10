@@ -73,10 +73,17 @@ public class Main {
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
+            if (username.isEmpty() || password.isEmpty()) {
+                System.out.println("Username and password cannot be empty.");
+                return;
+            }
+
             try {
                 currentUser = authController.authenticate(username, password);
                 if (currentUser != null) {
                     System.out.println("Login successful! Welcome, " + currentUser.getName() + "!");
+                } else {
+                    System.out.println("Login failed. Invalid credentials.");
                 }
             } catch (AuthenticationException e) {
                 System.out.println("Authentication failed: " + e.getMessage());
@@ -91,16 +98,26 @@ public class Main {
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
+            if (companyName.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                System.out.println("All fields are required.");
+                return;
+            }
+
             boolean success = registrationController.registerCompanyRepresentative(companyName, email, password);
             if (success) {
                 System.out.println("Company representative registered successfully!");
                 System.out.println("Note: Your account needs to be approved by Career Center Staff.");
             } else {
-                System.out.println("Registration failed. Please check your input.");
+                System.out.println("Registration failed. Company may already be registered.");
             }
         }
 
         private void showMainMenu() {
+            if (currentUser == null) {
+                System.out.println("Error: No user logged in.");
+                return;
+            }
+
             System.out.println("\n--- Main Menu ---");
             System.out.println("Logged in as: " + currentUser.getName() + " (" + getRoleName() + ")");
             
@@ -703,11 +720,16 @@ public class Main {
         }
 
         private void manageInternshipApprovals(CareerCenterStaff staff) {
+            if (staff == null) {
+                System.out.println("Error: Staff member not found.");
+                return;
+            }
+
             List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
             List<InternshipOpportunity> pending = new java.util.ArrayList<>();
             
             for (InternshipOpportunity opp : allOpps) {
-                if (opp.getStatus() == InternshipStatus.PENDING) {
+                if (opp != null && opp.getStatus() == InternshipStatus.PENDING) {
                     pending.add(opp);
                 }
             }
@@ -738,17 +760,24 @@ public class Main {
                     internshipController.reject(staff, selected);
                     System.out.println("Internship rejected.");
                 } else {
-                    System.out.println("Invalid decision.");
+                    System.out.println("Invalid decision. Please enter 'A' or 'R'.");
                 }
+            } else {
+                System.out.println("Invalid selection. Please enter a number between 1 and " + pending.size());
             }
         }
 
         private void manageCompanyRepApprovals(CareerCenterStaff staff) {
+            if (staff == null) {
+                System.out.println("Error: Staff member not found.");
+                return;
+            }
+
             List<CompanyRepresentative> reps = registrationController.getRepresentatives();
             List<CompanyRepresentative> pending = new java.util.ArrayList<>();
             
             for (CompanyRepresentative rep : reps) {
-                if (!rep.getIsApproved()) {
+                if (rep != null && !rep.getIsApproved()) {
                     pending.add(rep);
                 }
             }
@@ -779,8 +808,10 @@ public class Main {
                     registrationController.rejectRepresentative(staff, selected);
                     System.out.println("Company representative rejected.");
                 } else {
-                    System.out.println("Invalid decision.");
+                    System.out.println("Invalid decision. Please enter 'A' or 'R'.");
                 }
+            } else {
+                System.out.println("Invalid selection. Please enter a number between 1 and " + pending.size());
             }
         }
 
@@ -1039,10 +1070,25 @@ public class Main {
         }
 
         private void handleChangePassword() {
+            if (currentUser == null) {
+                System.out.println("You must be logged in to change password.");
+                return;
+            }
+
             System.out.print("Enter current password: ");
             String oldPassword = scanner.nextLine().trim();
             System.out.print("Enter new password: ");
             String newPassword = scanner.nextLine().trim();
+
+            if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+                System.out.println("Passwords cannot be empty.");
+                return;
+            }
+
+            if (newPassword.length() < 6) {
+                System.out.println("New password must be at least 6 characters.");
+                return;
+            }
             
             boolean success = registrationController.changePassword(currentUser.getName(), oldPassword, newPassword);
             if (success) {
@@ -1053,12 +1099,17 @@ public class Main {
         }
 
         private void handleLogout() {
-            authController.logout(currentUser);
-            currentUser = null;
-            System.out.println("Logged out successfully.");
+            if (currentUser != null) {
+                authController.logout(currentUser);
+                currentUser = null;
+                System.out.println("Logged out successfully.");
+            } else {
+                System.out.println("No user is currently logged in.");
+            }
         }
 
         private String getRoleName() {
+            if (currentUser == null) return "None";
             if (currentUser instanceof Student) return "Student";
             if (currentUser instanceof CompanyRepresentative) return "Company Representative";
             if (currentUser instanceof CareerCenterStaff) return "Career Center Staff";
