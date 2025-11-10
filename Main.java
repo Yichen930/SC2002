@@ -26,8 +26,8 @@ public class Main {
             this.registrationController = new RegistrationController();
             this.dataManager = new DataManager();
             
-            // Initialize with sample data for testing
-            initializeSampleData();
+            // Load data from files at startup
+            loadDataFromFiles();
         }
 
         public void run() {
@@ -1074,35 +1074,38 @@ public class Main {
             }
         }
 
-        private void initializeSampleData() {
-            // Create sample users for testing
-            Student student1 = new Student("STU001", "Alice", "Computer Science", 2);
-            Student student2 = new Student("STU002", "Bob", "Engineering", 3);
-            
-            CompanyRepresentative rep1 = new CompanyRepresentative("REP001", "John", "Tech Corp");
-            rep1.setApproved(true);
-            
-            CareerCenterStaff staff1 = new CareerCenterStaff("STAFF001", "Admin", "Career Services");
-            
-            // Add to data manager
-            List<User> users = new java.util.ArrayList<>();
-            users.add(student1);
-            users.add(student2);
-            users.add(rep1);
-            users.add(staff1);
-            
+        private void loadDataFromFiles() {
             try {
-                dataManager.saveUsers("users.dat", users);
-                authController.setUsers(dataManager.loadUsers("users.dat"));
-                registrationController.setUsers(dataManager.loadUsers("users.dat"));
+                // Load users first
+                List<User> users = dataManager.loadUsers("users.txt");
+                authController.setUsers(users);
+                registrationController.setUsers(users);
+                
+                // Load internships
+                List<InternshipOpportunity> internships = dataManager.loadInternships("internships.txt", users);
+                for (InternshipOpportunity opp : internships) {
+                    internshipController.addOpportunity(opp);
+                }
+                
+                // Load applications
+                List<Application> applications = dataManager.loadApplications("applications.txt", users, internships);
+                for (Application app : applications) {
+                    applicationController.addApplication(app);
+                }
+                
+                System.out.println("Data loaded successfully!");
+                System.out.println("- Loaded " + users.size() + " users");
+                System.out.println("- Loaded " + internships.size() + " internships");
+                System.out.println("- Loaded " + applications.size() + " applications");
+                System.out.println("\nSample Login Credentials:");
+                System.out.println("- Student: Alice (password: password)");
+                System.out.println("- Company Rep: John (password: password)");
+                System.out.println("- Staff: Admin (password: password)");
+                
             } catch (DataAccessException e) {
-                System.out.println("Warning: Could not initialize sample data: " + e.getMessage());
+                System.out.println("Warning: Could not load data from files: " + e.getMessage());
+                System.out.println("Starting with empty data. You can register new users.");
             }
-            
-            System.out.println("Sample data initialized:");
-            System.out.println("- Students: Alice (password: password), Bob (password: password)");
-            System.out.println("- Company Rep: John from Tech Corp (password: password, approved)");
-            System.out.println("- Staff: Admin (password: password)");
         }
     }
 }

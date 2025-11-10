@@ -1,0 +1,6 @@
+# Application Data File
+# Format: STUDENT_ID|INTERNSHIP_TITLE|STATUS|CREATED_DATE|UPDATED_DATE
+
+STU001|Software Engineering Intern|PENDING|2025-11-01|2025-11-01
+STU002|Software Engineering Intern|PENDING|2025-11-02|2025-11-02
+
