@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -131,10 +132,12 @@ public class Main {
         }
 
         private void showStudentMenu() {
-            System.out.println("1. View Available Internships");
+            System.out.println("1. Browse Internships (with filters)");
             System.out.println("2. View My Applications");
             System.out.println("3. Apply for Internship");
-            System.out.println("4. Change Password");
+            System.out.println("4. Accept Offer");
+            System.out.println("5. Withdraw Application");
+            System.out.println("6. Change Password");
         }
 
         private void handleStudentChoice(int choice) {
@@ -142,7 +145,7 @@ public class Main {
             
             switch (choice) {
                 case 1:
-                    viewAvailableInternships();
+                    browseInternshipsWithFilters(student);
                     break;
                 case 2:
                     viewMyApplications(student);
@@ -151,6 +154,12 @@ public class Main {
                     applyForInternship(student);
                     break;
                 case 4:
+                    acceptOffer(student);
+                    break;
+                case 5:
+                    withdrawApplication(student);
+                    break;
+                case 6:
                     handleChangePassword();
                     break;
                 default:
@@ -223,18 +232,66 @@ public class Main {
             }
         }
 
+        private void browseInternshipsWithFilters(Student student) {
+            System.out.println("\n--- Browse Internships ---");
+            System.out.println("Filter by:");
+            System.out.println("1. All visible internships");
+            System.out.println("2. Filter by level");
+            System.out.println("3. Only open for application (within date range)");
+            System.out.print("Choose filter option: ");
+            
+            int filterChoice = getIntInput();
+            List<InternshipOpportunity> opportunities = new ArrayList<>(internshipController.getVisibleOpportunities());
+            
+            switch (filterChoice) {
+                case 2:
+                    System.out.print("Enter level (BASIC/INTERMEDIATE/ADVANCED): ");
+                    String levelStr = scanner.nextLine().trim().toUpperCase();
+                    try {
+                        InternshipLevel level = InternshipLevel.valueOf(levelStr);
+                        opportunities = internshipController.filterByLevel(opportunities, level);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid level. Showing all.");
+                    }
+                    break;
+                case 3:
+                    opportunities = internshipController.getOpenOpportunities(java.time.LocalDate.now());
+                    break;
+                default:
+                    // Show all visible (case 1 or any other input)
+                    break;
+            }
+            
+            displayInternshipList(opportunities);
+        }
+
+        private void displayInternshipList(List<InternshipOpportunity> opportunities) {
+            if (opportunities.isEmpty()) {
+                System.out.println("No internships found.");
+                return;
+            }
+            
+            System.out.println("\n--- Internships ---");
+            int index = 1;
+            for (InternshipOpportunity opp : opportunities) {
+                System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
+                System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                System.out.println("   Slots: " + opp.getFilledSlots() + "/" + opp.getTotalSlots() + 
+                                 " (Remaining: " + opp.remainingSlots() + ")");
+                if (opp.getOpenDate() != null && opp.getCloseDate() != null) {
+                    System.out.println("   Application Period: " + opp.getOpenDate() + " to " + opp.getCloseDate());
+                }
+                index++;
+            }
+        }
+
         private void viewAvailableInternships() {
             Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
             System.out.println("\n--- Available Internships ---");
             if (opportunities.isEmpty()) {
                 System.out.println("No internships available at the moment.");
             } else {
-                int index = 1;
-                for (InternshipOpportunity opp : opportunities) {
-                    System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
-                    System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
-                    index++;
-                }
+                displayInternshipList(new ArrayList<>(opportunities));
             }
         }
 
@@ -279,6 +336,68 @@ public class Main {
                 } catch (ApplicationException e) {
                     System.out.println("Application failed: " + e.getMessage());
                 }
+            } else {
+                System.out.println("Invalid selection.");
+            }
+        }
+
+        private void acceptOffer(Student student) {
+            List<Application> acceptedApps = student.getSuccessfulApplications();
+            if (acceptedApps.isEmpty()) {
+                System.out.println("You have no offers to accept.");
+                return;
+            }
+
+            System.out.println("\n--- Your Offers ---");
+            for (int i = 0; i < acceptedApps.size(); i++) {
+                Application app = acceptedApps.get(i);
+                System.out.println((i + 1) + ". " + app.getOpportunity().getTitle() + 
+                                 " - " + app.getOpportunity().getCompanyName());
+            }
+
+            System.out.print("Select offer to accept (number): ");
+            int choice = getIntInput();
+
+            if (choice > 0 && choice <= acceptedApps.size()) {
+                Application selected = acceptedApps.get(choice - 1);
+                try {
+                    applicationController.accept(student, selected);
+                    System.out.println("Offer accepted! All other applications have been withdrawn.");
+                } catch (ApplicationException e) {
+                    System.out.println("Failed to accept offer: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Invalid selection.");
+            }
+        }
+
+        private void withdrawApplication(Student student) {
+            List<Application> activeApps = new ArrayList<>();
+            for (Application app : student.getApplications()) {
+                if (app.getStatus() == ApplicationStatus.PENDING) {
+                    activeApps.add(app);
+                }
+            }
+
+            if (activeApps.isEmpty()) {
+                System.out.println("You have no pending applications to withdraw.");
+                return;
+            }
+
+            System.out.println("\n--- Your Pending Applications ---");
+            for (int i = 0; i < activeApps.size(); i++) {
+                Application app = activeApps.get(i);
+                System.out.println((i + 1) + ". " + app.getOpportunity().getTitle() + 
+                                 " - " + app.getOpportunity().getCompanyName());
+            }
+
+            System.out.print("Select application to withdraw (number): ");
+            int choice = getIntInput();
+
+            if (choice > 0 && choice <= activeApps.size()) {
+                Application selected = activeApps.get(choice - 1);
+                selected.setStatus(ApplicationStatus.WITHDRAWN);
+                System.out.println("Application withdrawn successfully.");
             } else {
                 System.out.println("Invalid selection.");
             }
