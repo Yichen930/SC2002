@@ -361,7 +361,7 @@ public class Main {
                 int index = 1;
                 for (Application app : applications) {
                     System.out.println(index + ". " + app.getOpportunity().getTitle() + 
-                                     " - Status: " + app.getStatus());
+                                     " - Status: " + getApplicationStatusDisplay(app.getStatus()));
                     index++;
                 }
             }
@@ -735,7 +735,7 @@ public class Main {
                         Student student = app.getStudent();
                         System.out.println("  " + (i + 1) + ". " + student.getName() + 
                                          " (Year " + student.getYear() + ", " + student.getMajor() + ")");
-                        System.out.println("     Status: " + app.getStatus());
+                        System.out.println("     Status: " + getApplicationStatusDisplay(app.getStatus()));
                     }
                 }
             }
@@ -1249,6 +1249,22 @@ public class Main {
             if (currentUser instanceof CompanyRepresentative) return "Company Representative";
             if (currentUser instanceof CareerCenterStaff) return "Career Center Staff";
             return "Unknown";
+        }
+
+        private String getApplicationStatusDisplay(ApplicationStatus status) {
+            if (status == null) return "Unknown";
+            switch (status) {
+                case PENDING:
+                    return "Pending";
+                case ACCEPTED:
+                    return "Successful";
+                case REJECTED:
+                    return "Unsuccessful";
+                case WITHDRAWN:
+                    return "Withdrawn";
+                default:
+                    return status.toString();
+            }
         }
 
         private int getIntInput() {
