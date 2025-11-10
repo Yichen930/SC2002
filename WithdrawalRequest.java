@@ -11,7 +11,7 @@ public class WithdrawalRequest {
         this.applicant = applicant;
         this.withdrawalReason = reason;
         this.requestDate = LocalDate.now();
-        this.status = null;
+        this.status = WithdrawalStatus.PENDING;
     }
 
     public WithdrawalStatus getStatus() {
@@ -24,6 +24,10 @@ public class WithdrawalRequest {
 
     public String getWithdrawalReason() {
         return withdrawalReason;
+    }
+
+    public void setWithdrawalReason(String reason) {
+        this.withdrawalReason = reason;
     }
 
     public LocalDate getRequestDate() {

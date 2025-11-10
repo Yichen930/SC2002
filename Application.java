@@ -45,6 +45,10 @@ public class Application {
         return status == ApplicationStatus.ACCEPTED;
     }
 
+    public boolean isActive() {
+        return status == ApplicationStatus.PENDING || status == ApplicationStatus.ACCEPTED;
+    }
+
     public WithdrawalRequest getWithdrawal() {
         return withdrawal;
     }

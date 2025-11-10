@@ -118,15 +118,21 @@ public class InternshipOpportunity {
     }
 
     public void setVisible(boolean visible) {
+        if (visible && status != InternshipStatus.APPROVED) {
+            throw new IllegalStateException("Cannot make visible before approval");
+        }
         this.visible = visible;
     }
 
 
     public boolean isOpenForApplication(LocalDate today) {
-        return status == InternshipStatus.APPROVED && 
-               visible && 
-               today != null &&
-               !today.isBefore(openDate) && 
+        if (status != InternshipStatus.APPROVED || !visible || today == null) {
+            return false;
+        }
+        if (openDate == null || closeDate == null) {
+            return false;
+        }
+        return !today.isBefore(openDate) && 
                !today.isAfter(closeDate) &&
                !isFilled();
     }
@@ -139,10 +145,26 @@ public class InternshipOpportunity {
         return Math.max(0, totalSlots - filledSlots);
     }
 
-    public void reserveSlot() {
-        if (!isFilled()) {
+    public boolean reserveSlot() {
+        if (filledSlots < totalSlots) {
             filledSlots++;
+            if (filledSlots >= totalSlots) {
+                this.status = InternshipStatus.FILLED;
+            }
+            return true;
         }
+        return false;
+    }
+
+    public boolean freeSlot() {
+        if (filledSlots > 0) {
+            filledSlots--;
+            if (status == InternshipStatus.FILLED) {
+                status = InternshipStatus.APPROVED; // space reopened
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
