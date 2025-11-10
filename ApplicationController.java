@@ -8,18 +8,32 @@ public class ApplicationController {
         this.applications = new ArrayList<>();
     }
 
-    public boolean accept(Student student, Application app) {
+    public boolean accept(Student student, Application app) throws ApplicationException {
         if (student == null || app == null) {
             return false;
         }
         if (!app.getStudent().equals(student)) {
             return false;
         }
-        if (app.getStatus() == ApplicationStatus.PENDING) {
-            app.setStatus(ApplicationStatus.ACCEPTED);
-            return true;
+        if (app.getStatus() != ApplicationStatus.ACCEPTED) {
+            throw new ApplicationException("Application must be in ACCEPTED status to be confirmed");
         }
-        return false;
+
+        // Reserve slot on the internship
+        InternshipOpportunity opp = app.getOpportunity();
+        boolean slotReserved = opp.reserveSlot();
+        if (!slotReserved) {
+            throw new ApplicationException("No slots available for this internship");
+        }
+
+        // Auto-withdraw all other active applications from the same student
+        for (Application otherApp : student.getApplications()) {
+            if (otherApp != app && otherApp.isActive()) {
+                otherApp.setStatus(ApplicationStatus.WITHDRAWN);
+            }
+        }
+
+        return true;
     }
 
     public boolean reject(Student student, Application app) {

@@ -271,13 +271,13 @@ public class Main {
             
             if (choice > 0 && choice <= oppArray.length) {
                 InternshipOpportunity selected = oppArray[choice - 1];
-                if (student.canApplyForInternship(selected)) {
+                try {
                     Application app = new Application(student, selected);
                     student.addApplication(app);
                     applicationController.addApplication(app);
                     System.out.println("Application submitted successfully!");
-                } else {
-                    System.out.println("You cannot apply for this internship. Check your eligibility or application limits.");
+                } catch (ApplicationException e) {
+                    System.out.println("Application failed: " + e.getMessage());
                 }
             } else {
                 System.out.println("Invalid selection.");

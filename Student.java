@@ -27,13 +27,26 @@ public class Student extends User {
         return Collections.unmodifiableList(applications);
     }
 
-    public void addApplication(Application app) {
+    public void addApplication(Application app) throws ApplicationException {
         if (app == null) return;
 
-        if (getApplicationByOpportunity(app.getOpportunity()) != null) return;
+        // Check for duplicate application (by internship equality, not object reference)
+        Application existingApp = getApplicationByOpportunity(app.getOpportunity());
+        if (existingApp != null && existingApp.getStatus() != ApplicationStatus.WITHDRAWN) {
+            throw new ApplicationException("You have already applied to this internship");
+        }
 
-        if (hasAcceptedOffer()) return;
-        if (!canApplyMore()) return;
+        if (hasAcceptedOffer()) {
+            throw new ApplicationException("You cannot apply after accepting an offer");
+        }
+
+        if (!canApplyMore()) {
+            throw new ApplicationException("You have reached the maximum of " + MAX_ACTIVE_APPLICATIONS + " active applications");
+        }
+
+        if (!canApplyForLevel(app.getOpportunity().getLevel())) {
+            throw new ApplicationException("Year 1/2 students can only apply to BASIC internships");
+        }
 
         applications.add(app);
     }
@@ -46,8 +59,17 @@ public class Student extends User {
 
     public boolean canApplyForInternship(InternshipOpportunity opp) {
         if (opp == null) return false;
+        
+        // Check for duplicate
+        Application existingApp = getApplicationByOpportunity(opp);
+        if (existingApp != null && existingApp.getStatus() != ApplicationStatus.WITHDRAWN) {
+            return false;
+        }
+        
         if (!canApplyForLevel(opp.getLevel())) return false;
         if (!canApplyMore()) return false;
+        if (hasAcceptedOffer()) return false;
+        
         return true;
     }
 
@@ -67,7 +89,8 @@ public class Student extends User {
         if (opp == null) return null;
         for (Application app : applications) {
             if (app == null || app.getOpportunity() == null) continue;
-            if (app.getOpportunity() == opp) return app;
+            // Use equals() for proper comparison, not object reference
+            if (app.getOpportunity().equals(opp)) return app;
         }
         return null;
     }
@@ -112,7 +135,8 @@ public class Student extends User {
         int active = 0;
         for (Application app : applications) {
             if (app == null) continue;
-            if (app.isPending()) {
+            // Count all active applications (PENDING or ACCEPTED)
+            if (app.isActive()) {
                 active++;
                 if (active >= MAX_ACTIVE_APPLICATIONS) return false;
             }
