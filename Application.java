@@ -1,6 +1,50 @@
 import java.time.LocalDate;
 import java.util.Objects;
 
+/**
+ * Represents a student's application to an internship opportunity.
+ * 
+ * <p>This class models the complete application lifecycle from submission
+ * through review, acceptance, and potential withdrawal. It serves as the
+ * central link between Students and InternshipOpportunities.</p>
+ * 
+ * <p>Application Lifecycle:</p>
+ * <ol>
+ *   <li>PENDING: Student submits application, awaiting company review</li>
+ *   <li>ACCEPTED: Company Rep approves, awaiting student confirmation</li>
+ *   <li>CONFIRMED: Student accepts placement (slot reserved, other apps withdrawn)</li>
+ *   <li>REJECTED: Company Rep rejects application</li>
+ *   <li>WITHDRAWN: Student withdraws (pre or post confirmation)</li>
+ * </ol>
+ * 
+ * <p>Two-Step Approval Process:</p>
+ * <ol>
+ *   <li>Company Representative reviews and approves → Status: ACCEPTED</li>
+ *   <li>Student accepts placement confirmation → Slot reserved</li>
+ * </ol>
+ * 
+ * <p>Withdrawal Handling:</p>
+ * <ul>
+ *   <li>Pre-Confirmation: Direct withdrawal, no approval needed</li>
+ *   <li>Post-Confirmation: Creates WithdrawalRequest, requires Staff approval</li>
+ *   <li>Approved withdrawals free the internship slot</li>
+ * </ul>
+ * 
+ * <p>Status Terminology:</p>
+ * The application uses internal enum values (PENDING, ACCEPTED, REJECTED, WITHDRAWN)
+ * but displays user-friendly text to students ("Pending", "Successful", 
+ * "Unsuccessful", "Withdrawn") as per assignment requirements.
+ * 
+ * <p>Timestamps:</p>
+ * The application tracks creation and last update dates using LocalDate.
+ * These are used for auditing and reporting purposes.
+ * 
+ * @version 1.0
+ * @see ApplicationStatus
+ * @see Student
+ * @see InternshipOpportunity
+ * @see WithdrawalRequest
+ */
 public class Application {
     private ApplicationStatus status = ApplicationStatus.PENDING;
     private LocalDate createdAt;

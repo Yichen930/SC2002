@@ -2,6 +2,55 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents an Internship Opportunity in the Internship Placement Management System.
+ * 
+ * <p>This class models a complete internship posting with all necessary details
+ * for students to evaluate and apply, and for the system to manage the
+ * application lifecycle.</p>
+ * 
+ * <p>Key Attributes:</p>
+ * <ul>
+ *   <li>Basic Info: title, description, company name</li>
+ *   <li>Requirements: level (BASIC/INTERMEDIATE/ADVANCED), preferred major(s)</li>
+ *   <li>Timeline: open date, close date for applications</li>
+ *   <li>Capacity: total slots, filled slots (max 10 slots per internship)</li>
+ *   <li>Status: PENDING, APPROVED, REJECTED, FILLED</li>
+ *   <li>Visibility: boolean flag to show/hide from students</li>
+ * </ul>
+ * 
+ * <p>Lifecycle States:</p>
+ * <ol>
+ *   <li>PENDING: Created by Company Rep, awaiting staff approval</li>
+ *   <li>APPROVED: Approved by staff, can be made visible to students</li>
+ *   <li>REJECTED: Rejected by staff, not visible to students</li>
+ *   <li>FILLED: All slots are confirmed, automatically set</li>
+ * </ol>
+ * 
+ * <p>Slot Management:</p>
+ * <ul>
+ *   <li>Slots reserved when students accept placement confirmations</li>
+ *   <li>Slots freed when post-confirmation withdrawals are approved</li>
+ *   <li>Status automatically changes to FILLED when all slots are taken</li>
+ *   <li>Status reverts to APPROVED when a slot is freed from FILLED state</li>
+ * </ul>
+ * 
+ * <p>Visibility Rules:</p>
+ * <ul>
+ *   <li>Must be APPROVED before visibility can be toggled</li>
+ *   <li>Students only see visible, approved, open, non-filled internships</li>
+ *   <li>Students who applied can still view even if visibility is off</li>
+ * </ul>
+ * 
+ * <p>Filtering by Preferred Major:</p>
+ * If preferred majors are specified, only students with matching majors
+ * will see this internship in their browse/apply views.
+ * 
+ * @version 1.0
+ * @see InternshipStatus
+ * @see InternshipLevel
+ * @see CompanyRepresentative
+ */
 public class InternshipOpportunity {
     private String title;
     private String description;

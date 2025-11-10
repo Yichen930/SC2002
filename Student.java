@@ -2,6 +2,35 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a Student user in the Internship Placement Management System.
+ * 
+ * <p>Students are a core user type in the system with the following capabilities:</p>
+ * <ul>
+ *   <li>Browse and filter internship opportunities based on profile</li>
+ *   <li>Apply for up to 3 internships simultaneously</li>
+ *   <li>View application status (Pending, Successful, Unsuccessful)</li>
+ *   <li>Accept placement confirmations from approved applications</li>
+ *   <li>Request withdrawals (pre and post confirmation)</li>
+ * </ul>
+ * 
+ * <p>Business Rules:</p>
+ * <ul>
+ *   <li>Year 1-2 students: Can only apply to BASIC level internships</li>
+ *   <li>Year 3-4 students: Can apply to any level (BASIC, INTERMEDIATE, ADVANCED)</li>
+ *   <li>Maximum 3 active applications at any time (PENDING or ACCEPTED status)</li>
+ *   <li>Can only accept ONE placement confirmation (auto-withdraws other applications)</li>
+ *   <li>Cannot apply to same internship twice</li>
+ *   <li>Only sees internships matching preferred major (if specified)</li>
+ * </ul>
+ * 
+ * <p>This class maintains a list of applications and enforces all
+ * student-specific validation rules through the addApplication method.</p>
+ * 
+ * @version 1.0
+ * @see User
+ * @see Application
+ */
 public class Student extends User {
     private int year;
     private String major;

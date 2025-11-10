@@ -3,12 +3,61 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+/**
+ * Main entry point for the Internship Placement Management System.
+ * 
+ * <p>This system manages the complete lifecycle of internship opportunities,
+ * student applications, and user management for three distinct roles:
+ * Students, Company Representatives, and Career Center Staff.</p>
+ * 
+ * <p>Key Features:</p>
+ * <ul>
+ *   <li>Role-based authentication and authorization</li>
+ *   <li>Internship opportunity management with approval workflow</li>
+ *   <li>Student application processing with two-step approval</li>
+ *   <li>Comprehensive reporting and analytics</li>
+ *   <li>File-based data persistence</li>
+ * </ul>
+ * 
+ * @version 1.0
+ */
 public class Main {
+    /**
+     * Main method to start the CLI application.
+     * 
+     * <p>Initializes the Command Line Interface and starts the main
+     * event loop for user interactions. The application will load
+     * data from text files and present the login menu.</p>
+     * 
+     * @param args command line arguments (not used in this implementation)
+     */
     public static void main(String[] args) {
         CLI cli = new CLI();
         cli.run();
     }
 
+    /**
+     * Command Line Interface class that handles all user interactions.
+     * 
+     * <p>This class implements the View layer of the MVC pattern,
+     * providing a text-based interface for all system operations.
+     * It delegates business logic to appropriate controllers while
+     * managing user sessions and maintaining UI state.</p>
+     * 
+     * <p>Responsibilities:</p>
+     * <ul>
+     *   <li>Display menus based on user role (Student, Company Rep, Staff)</li>
+     *   <li>Handle user input and validation</li>
+     *   <li>Delegate operations to controllers</li>
+     *   <li>Maintain session state (current user, filter preferences)</li>
+     *   <li>Load and initialize system data from files</li>
+     * </ul>
+     * 
+     * <p>Session Management:</p>
+     * The CLI maintains filter persistence across menu switches,
+     * allowing users to save and reuse their filter preferences
+     * within a single session.
+     */
     static class CLI {
         private Scanner scanner;
         private AuthController authController;
@@ -17,11 +66,27 @@ public class Main {
         private RegistrationController registrationController;
         private DataManager dataManager;
         private User currentUser;
-        
+
         // Filter persistence for user session
         private InternshipLevel lastFilterLevel = null;
         private boolean hasLevelFilter = false;
 
+        /**
+         * Constructs the CLI and initializes all system components.
+         * 
+         * <p>Initialization sequence:</p>
+         * <ol>
+         *   <li>Creates Scanner for user input</li>
+         *   <li>Initializes all controllers (Auth, Application, Internship, Registration)</li>
+         *   <li>Creates DataManager for file I/O operations</li>
+         *   <li>Loads user data from users.txt</li>
+         *   <li>Loads internship data from internships.txt</li>
+         *   <li>Loads application data from applications.txt</li>
+         * </ol>
+         * 
+         * <p>If data files are missing or corrupted, the system will start
+         * with empty data and display a warning message to the user.</p>
+         */
         public CLI() {
             this.scanner = new Scanner(System.in);
             this.authController = new AuthController();
@@ -34,6 +99,20 @@ public class Main {
             loadDataFromFiles();
         }
 
+        /**
+         * Starts the main application event loop.
+         * 
+         * <p>This method runs indefinitely until the user explicitly exits.
+         * It displays different menus based on the current authentication state:</p>
+         * <ul>
+         *   <li>Login Menu: if no user is authenticated</li>
+         *   <li>Role-specific Main Menu: if user is logged in</li>
+         * </ul>
+         * 
+         * <p>The menu system is role-aware and automatically adapts to show
+         * options relevant to the current user's role (Student, Company
+         * Representative, or Career Center Staff).</p>
+         */
         public void run() {
             System.out.println("=== Internship Management System ===");
             
@@ -343,10 +422,10 @@ public class Main {
             }
             
             System.out.println("\n--- Internships ---");
-            int index = 1;
-            for (InternshipOpportunity opp : opportunities) {
-                System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
-                System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                int index = 1;
+                for (InternshipOpportunity opp : opportunities) {
+                    System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
+                    System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
                 
                 // Display preferred major if set
                 if (opp.getPreferredMajor() != null && !opp.getPreferredMajor().isEmpty()) {
@@ -363,16 +442,6 @@ public class Main {
                 }
                 
                 index++;
-            }
-        }
-
-        private void viewAvailableInternships() {
-            Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
-            System.out.println("\n--- Available Internships ---");
-            if (opportunities.isEmpty()) {
-                System.out.println("No internships available at the moment.");
-            } else {
-                displayInternshipList(new ArrayList<>(opportunities));
             }
         }
 
@@ -426,7 +495,7 @@ public class Main {
                 } catch (ApplicationException e) {
                     System.out.println("Application failed: " + e.getMessage());
                 }
-            } else {
+                } else {
                 System.out.println("Invalid selection.");
             }
         }
@@ -990,46 +1059,6 @@ public class Main {
             }
         }
 
-        private void reviewApplications(CareerCenterStaff staff) {
-            List<Application> applications = applicationController.getAllApplications();
-            List<Application> pending = new java.util.ArrayList<>();
-            
-            for (Application app : applications) {
-                if (app.getStatus() == ApplicationStatus.PENDING) {
-                    pending.add(app);
-                }
-            }
-            
-            if (pending.isEmpty()) {
-                System.out.println("No pending applications to review.");
-                return;
-            }
-            
-            System.out.println("\n--- Pending Applications ---");
-            for (int i = 0; i < pending.size(); i++) {
-                Application app = pending.get(i);
-                System.out.println((i + 1) + ". " + app.getStudent().getName() + 
-                                 " applied for " + app.getOpportunity().getTitle());
-            }
-            
-            System.out.print("Select application to review (number): ");
-            int choice = getIntInput();
-            
-            if (choice > 0 && choice <= pending.size()) {
-                Application selected = pending.get(choice - 1);
-                System.out.print("Decision (ACCEPTED/REJECTED): ");
-                String decisionStr = scanner.nextLine().trim().toUpperCase();
-                
-                try {
-                    ApplicationStatus decision = ApplicationStatus.valueOf(decisionStr);
-                    applicationController.review(selected.getOpportunity(), selected, decision);
-                    System.out.println("Application reviewed: " + decision);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Invalid decision.");
-                }
-            }
-        }
-
         private void reviewWithdrawalRequests(CareerCenterStaff staff) {
             List<Application> allApplications = applicationController.getAllApplications();
             List<Application> pendingWithdrawals = new ArrayList<>();
@@ -1282,9 +1311,9 @@ public class Main {
 
         private void handleLogout() {
             if (currentUser != null) {
-                authController.logout(currentUser);
-                currentUser = null;
-                System.out.println("Logged out successfully.");
+            authController.logout(currentUser);
+            currentUser = null;
+            System.out.println("Logged out successfully.");
             } else {
                 System.out.println("No user is currently logged in.");
             }
@@ -1298,6 +1327,25 @@ public class Main {
             return "Unknown";
         }
 
+        /**
+         * Converts internal ApplicationStatus enum to user-friendly display text.
+         * 
+         * <p>This method provides a mapping between internal status values
+         * and the terminology specified in the assignment requirements.
+         * It ensures consistent and user-friendly status messages throughout
+         * the application.</p>
+         * 
+         * <p>Status Mappings:</p>
+         * <ul>
+         *   <li>PENDING → "Pending" (awaiting company review)</li>
+         *   <li>ACCEPTED → "Successful" (approved by company, awaiting student confirmation)</li>
+         *   <li>REJECTED → "Unsuccessful" (rejected by company)</li>
+         *   <li>WITHDRAWN → "Withdrawn" (withdrawn by student)</li>
+         * </ul>
+         * 
+         * @param status the ApplicationStatus enum value to convert
+         * @return user-friendly status string suitable for display, or "Unknown" if status is null
+         */
         private String getApplicationStatusDisplay(ApplicationStatus status) {
             if (status == null) return "Unknown";
             switch (status) {
@@ -1323,6 +1371,38 @@ public class Main {
             }
         }
 
+        /**
+         * Loads all system data from pipe-delimited text files.
+         * 
+         * <p>This method orchestrates the complete data loading sequence,
+         * reading from three main data files:</p>
+         * <ol>
+         *   <li>users.txt - User accounts (Students, Company Reps, Staff)</li>
+         *   <li>internships.txt - Internship opportunities with all details</li>
+         *   <li>applications.txt - Student applications linked to internships</li>
+         * </ol>
+         * 
+         * <p>The loading process maintains referential integrity by:</p>
+         * <ul>
+         *   <li>Loading users first to establish base entities</li>
+         *   <li>Loading internships second, linking to Company Representatives</li>
+         *   <li>Loading applications last, linking to both Students and Internships</li>
+         * </ul>
+         * 
+         * <p>After successful loading, displays a summary including:</p>
+         * <ul>
+         *   <li>Count of loaded entities (users, internships, applications)</li>
+         *   <li>Sample login credentials for testing</li>
+         * </ul>
+         * 
+         * <p>Error Handling:</p>
+         * If files are missing or corrupted, catches DataAccessException
+         * and displays a warning, allowing the system to start with empty data.
+         * 
+         * @see DataManager#loadUsers(String)
+         * @see DataManager#loadInternships(String, List)
+         * @see DataManager#loadApplications(String, List, List)
+         */
         private void loadDataFromFiles() {
             try {
                 // Load users first
