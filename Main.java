@@ -224,8 +224,9 @@ public class Main {
             System.out.println("2. Approve/Reject Company Representatives");
             System.out.println("3. Review Applications");
             System.out.println("4. Review Withdrawal Requests");
-            System.out.println("5. View All Internship Opportunities");
-            System.out.println("6. Change Password");
+            System.out.println("5. Generate Reports");
+            System.out.println("6. View All Internship Opportunities");
+            System.out.println("7. Change Password");
         }
 
         private void handleStaffChoice(int choice) {
@@ -245,9 +246,12 @@ public class Main {
                     reviewWithdrawalRequests(staff);
                     break;
                 case 5:
-                    viewAllInternships();
+                    generateReports();
                     break;
                 case 6:
+                    viewAllInternships();
+                    break;
+                case 7:
                     handleChangePassword();
                     break;
                 default:
@@ -876,6 +880,154 @@ public class Main {
             } else {
                 System.out.println("Invalid selection.");
             }
+        }
+
+        private void generateReports() {
+            System.out.println("\n--- Generate Reports ---");
+            System.out.println("1. Internship Status Counts");
+            System.out.println("2. Student Placements by Major");
+            System.out.println("3. Applications per Internship");
+            System.out.println("4. Company Representative Approval Status");
+            System.out.print("Choose report: ");
+            
+            int choice = getIntInput();
+            
+            switch (choice) {
+                case 1:
+                    reportInternshipStatusCounts();
+                    break;
+                case 2:
+                    reportPlacementsByMajor();
+                    break;
+                case 3:
+                    reportApplicationsPerInternship();
+                    break;
+                case 4:
+                    reportCompanyRepApprovalStatus();
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+
+        private void reportInternshipStatusCounts() {
+            List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
+            
+            int pending = 0;
+            int approved = 0;
+            int rejected = 0;
+            int filled = 0;
+            
+            for (InternshipOpportunity opp : allOpps) {
+                if (opp == null) continue;
+                switch (opp.getStatus()) {
+                    case PENDING:
+                        pending++;
+                        break;
+                    case APPROVED:
+                        approved++;
+                        break;
+                    case REJECTED:
+                        rejected++;
+                        break;
+                    case FILLED:
+                        filled++;
+                        break;
+                }
+            }
+            
+            System.out.println("\n=== Internship Status Report ===");
+            System.out.println("Total Internships: " + allOpps.size());
+            System.out.println("  PENDING:  " + pending);
+            System.out.println("  APPROVED: " + approved);
+            System.out.println("  REJECTED: " + rejected);
+            System.out.println("  FILLED:   " + filled);
+            System.out.println("================================");
+        }
+
+        private void reportPlacementsByMajor() {
+            List<Application> allApps = applicationController.getAllApplications();
+            java.util.Map<String, Integer> placementsByMajor = new java.util.HashMap<>();
+            
+            for (Application app : allApps) {
+                if (app != null && app.getStatus() == ApplicationStatus.ACCEPTED) {
+                    Student student = app.getStudent();
+                    if (student != null) {
+                        String major = student.getMajor();
+                        placementsByMajor.put(major, placementsByMajor.getOrDefault(major, 0) + 1);
+                    }
+                }
+            }
+            
+            System.out.println("\n=== Student Placements by Major ===");
+            if (placementsByMajor.isEmpty()) {
+                System.out.println("No placements yet.");
+            } else {
+                for (java.util.Map.Entry<String, Integer> entry : placementsByMajor.entrySet()) {
+                    System.out.println(entry.getKey() + ": " + entry.getValue() + " student(s)");
+                }
+            }
+            System.out.println("===================================");
+        }
+
+        private void reportApplicationsPerInternship() {
+            List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
+            List<Application> allApps = applicationController.getAllApplications();
+            
+            System.out.println("\n=== Applications per Internship ===");
+            
+            for (InternshipOpportunity opp : allOpps) {
+                if (opp == null) continue;
+                
+                int appCount = 0;
+                for (Application app : allApps) {
+                    if (app != null && app.getOpportunity() != null && 
+                        app.getOpportunity().equals(opp)) {
+                        appCount++;
+                    }
+                }
+                
+                double fillRate = 0.0;
+                if (opp.getTotalSlots() > 0) {
+                    fillRate = (double) opp.getFilledSlots() / opp.getTotalSlots() * 100;
+                }
+                
+                System.out.println("\n" + opp.getTitle() + " (" + opp.getCompanyName() + ")");
+                System.out.println("  Applications: " + appCount);
+                System.out.println("  Fill Rate: " + String.format("%.1f", fillRate) + "% " +
+                                 "(" + opp.getFilledSlots() + "/" + opp.getTotalSlots() + ")");
+                System.out.println("  Status: " + opp.getStatus());
+            }
+            
+            System.out.println("\n===================================");
+        }
+
+        private void reportCompanyRepApprovalStatus() {
+            List<CompanyRepresentative> allReps = registrationController.getRepresentatives();
+            
+            int approved = 0;
+            int pending = 0;
+            
+            System.out.println("\n=== Company Representative Status ===");
+            
+            for (CompanyRepresentative rep : allReps) {
+                if (rep == null) continue;
+                
+                String status = rep.getIsApproved() ? "APPROVED" : "PENDING";
+                System.out.println(rep.getName() + " (" + rep.getCompanyName() + "): " + status);
+                
+                if (rep.getIsApproved()) {
+                    approved++;
+                } else {
+                    pending++;
+                }
+            }
+            
+            System.out.println("\nSummary:");
+            System.out.println("  Total: " + allReps.size());
+            System.out.println("  Approved: " + approved);
+            System.out.println("  Pending: " + pending);
+            System.out.println("====================================");
         }
 
         private void viewAllInternships() {
