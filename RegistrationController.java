@@ -10,23 +10,26 @@ public class RegistrationController {
         this.users = new ArrayList<>();
     }
 
-    public boolean registerCompanyRepresentative(String companyName, String email, String password) {
-        if (companyName == null || email == null || password == null) {
+    public boolean registerCompanyRepresentative(String name, String email, String companyName, String department, String position, String password) {
+        if (name == null || email == null || companyName == null || password == null) {
             return false;
         }
 
-        if (companyName.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty()) {
+        if (name.trim().isEmpty() || email.trim().isEmpty() || companyName.trim().isEmpty() || password.trim().isEmpty()) {
             return false;
         }
 
-        for (CompanyRepresentative rep : representatives) {
-            if (rep.getCompanyName().equals(companyName)) {
+        // Check if email already exists
+        for (User user : users) {
+            if (user != null && user.getId() != null && user.getId().equals(email)) {
                 return false;
             }
         }
 
-        String id = "REP-" + System.currentTimeMillis();
-        CompanyRepresentative newRep = new CompanyRepresentative(id, email, companyName);
+        // Use email as User ID (per assignment requirements)
+        CompanyRepresentative newRep = new CompanyRepresentative(email, name, companyName);
+        newRep.setDepartment(department != null && !department.trim().isEmpty() ? department : "N/A");
+        newRep.setPosition(position != null && !position.trim().isEmpty() ? position : "N/A");
         newRep.setPassword(password);
 
         representatives.add(newRep);

@@ -3,12 +3,61 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+/**
+ * Main entry point for the Internship Placement Management System.
+ * 
+ * <p>This system manages the complete lifecycle of internship opportunities,
+ * student applications, and user management for three distinct roles:
+ * Students, Company Representatives, and Career Center Staff.</p>
+ * 
+ * <p>Key Features:</p>
+ * <ul>
+ *   <li>Role-based authentication and authorization</li>
+ *   <li>Internship opportunity management with approval workflow</li>
+ *   <li>Student application processing with two-step approval</li>
+ *   <li>Comprehensive reporting and analytics</li>
+ *   <li>File-based data persistence</li>
+ * </ul>
+ * 
+ * @version 1.0
+ */
 public class Main {
+    /**
+     * Main method to start the CLI application.
+     * 
+     * <p>Initializes the Command Line Interface and starts the main
+     * event loop for user interactions. The application will load
+     * data from text files and present the login menu.</p>
+     * 
+     * @param args command line arguments (not used in this implementation)
+     */
     public static void main(String[] args) {
         CLI cli = new CLI();
         cli.run();
     }
 
+    /**
+     * Command Line Interface class that handles all user interactions.
+     * 
+     * <p>This class implements the View layer of the MVC pattern,
+     * providing a text-based interface for all system operations.
+     * It delegates business logic to appropriate controllers while
+     * managing user sessions and maintaining UI state.</p>
+     * 
+     * <p>Responsibilities:</p>
+     * <ul>
+     *   <li>Display menus based on user role (Student, Company Rep, Staff)</li>
+     *   <li>Handle user input and validation</li>
+     *   <li>Delegate operations to controllers</li>
+     *   <li>Maintain session state (current user, filter preferences)</li>
+     *   <li>Load and initialize system data from files</li>
+     * </ul>
+     * 
+     * <p>Session Management:</p>
+     * The CLI maintains filter persistence across menu switches,
+     * allowing users to save and reuse their filter preferences
+     * within a single session.
+     */
     static class CLI {
         private Scanner scanner;
         private AuthController authController;
@@ -18,6 +67,26 @@ public class Main {
         private DataManager dataManager;
         private User currentUser;
 
+        // Filter persistence for user session
+        private InternshipLevel lastFilterLevel = null;
+        private boolean hasLevelFilter = false;
+
+        /**
+         * Constructs the CLI and initializes all system components.
+         * 
+         * <p>Initialization sequence:</p>
+         * <ol>
+         *   <li>Creates Scanner for user input</li>
+         *   <li>Initializes all controllers (Auth, Application, Internship, Registration)</li>
+         *   <li>Creates DataManager for file I/O operations</li>
+         *   <li>Loads user data from users.txt</li>
+         *   <li>Loads internship data from internships.txt</li>
+         *   <li>Loads application data from applications.txt</li>
+         * </ol>
+         * 
+         * <p>If data files are missing or corrupted, the system will start
+         * with empty data and display a warning message to the user.</p>
+         */
         public CLI() {
             this.scanner = new Scanner(System.in);
             this.authController = new AuthController();
@@ -30,6 +99,20 @@ public class Main {
             loadDataFromFiles();
         }
 
+        /**
+         * Starts the main application event loop.
+         * 
+         * <p>This method runs indefinitely until the user explicitly exits.
+         * It displays different menus based on the current authentication state:</p>
+         * <ul>
+         *   <li>Login Menu: if no user is authenticated</li>
+         *   <li>Role-specific Main Menu: if user is logged in</li>
+         * </ul>
+         * 
+         * <p>The menu system is role-aware and automatically adapts to show
+         * options relevant to the current user's role (Student, Company
+         * Representative, or Career Center Staff).</p>
+         */
         public void run() {
             System.out.println("=== Internship Management System ===");
             
@@ -68,18 +151,18 @@ public class Main {
         }
 
         private void handleLogin() {
-            System.out.print("Enter username (name): ");
-            String username = scanner.nextLine().trim();
+            System.out.print("Enter User ID (e.g., U2345123F, john@techcorp.com, admin@ntu.edu.sg): ");
+            String userId = scanner.nextLine().trim();
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
-            if (username.isEmpty() || password.isEmpty()) {
-                System.out.println("Username and password cannot be empty.");
+            if (userId.isEmpty() || password.isEmpty()) {
+                System.out.println("User ID and password cannot be empty.");
                 return;
             }
 
             try {
-                currentUser = authController.authenticate(username, password);
+                currentUser = authController.authenticate(userId, password);
                 if (currentUser != null) {
                     System.out.println("Login successful! Welcome, " + currentUser.getName() + "!");
                 } else {
@@ -91,24 +174,31 @@ public class Main {
         }
 
         private void handleRegisterCompanyRep() {
+            System.out.print("Enter your name: ");
+            String name = scanner.nextLine().trim();
+            System.out.print("Enter company email (this will be your User ID): ");
+            String email = scanner.nextLine().trim();
             System.out.print("Enter company name: ");
             String companyName = scanner.nextLine().trim();
-            System.out.print("Enter email: ");
-            String email = scanner.nextLine().trim();
+            System.out.print("Enter department: ");
+            String department = scanner.nextLine().trim();
+            System.out.print("Enter position: ");
+            String position = scanner.nextLine().trim();
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
-            if (companyName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                System.out.println("All fields are required.");
+            if (name.isEmpty() || email.isEmpty() || companyName.isEmpty() || password.isEmpty()) {
+                System.out.println("Name, email, company name, and password are required.");
                 return;
             }
 
-            boolean success = registrationController.registerCompanyRepresentative(companyName, email, password);
+            boolean success = registrationController.registerCompanyRepresentative(name, email, companyName, department, position, password);
             if (success) {
                 System.out.println("Company representative registered successfully!");
-                System.out.println("Note: Your account needs to be approved by Career Center Staff.");
+                System.out.println("Your User ID is: " + email);
+                System.out.println("Note: Your account needs to be approved by Career Center Staff before you can create internships.");
             } else {
-                System.out.println("Registration failed. Company may already be registered.");
+                System.out.println("Registration failed. Email may already be registered.");
             }
         }
 
@@ -283,9 +373,16 @@ public class Main {
         private void browseInternshipsWithFilters(Student student) {
             System.out.println("\n--- Browse Internships ---");
             System.out.println("Showing internships filtered by your profile (Year " + student.getYear() + ", " + student.getMajor() + ")");
+            
+            // Display saved filter if exists
+            if (hasLevelFilter && lastFilterLevel != null) {
+                System.out.println("(Last filter: " + lastFilterLevel + " level)");
+            }
+            
             System.out.println("Filter by:");
             System.out.println("1. All eligible internships (filtered by major, level, dates)");
             System.out.println("2. Additional filter by level");
+            System.out.println("3. Use last filter" + (hasLevelFilter ? " (" + lastFilterLevel + ")" : " (none saved)"));
             System.out.print("Choose filter option: ");
             
             int filterChoice = getIntInput();
@@ -297,10 +394,23 @@ public class Main {
                 try {
                     InternshipLevel level = InternshipLevel.valueOf(levelStr);
                     opportunities = internshipController.filterByLevel(opportunities, level);
+                    // Save filter for next time
+                    lastFilterLevel = level;
+                    hasLevelFilter = true;
+                    System.out.println("Filter saved for this session.");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Invalid level. Showing all eligible internships.");
+                    hasLevelFilter = false;
                 }
+            } else if (filterChoice == 3 && hasLevelFilter && lastFilterLevel != null) {
+                opportunities = internshipController.filterByLevel(opportunities, lastFilterLevel);
+                System.out.println("Applied last filter: " + lastFilterLevel);
+            } else {
+                hasLevelFilter = false;
             }
+            
+            // Sort alphabetically by title (default sorting per assignment)
+            opportunities.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
             
             displayInternshipList(opportunities);
         }
@@ -312,10 +422,10 @@ public class Main {
             }
             
             System.out.println("\n--- Internships ---");
-            int index = 1;
-            for (InternshipOpportunity opp : opportunities) {
-                System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
-                System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
+                int index = 1;
+                for (InternshipOpportunity opp : opportunities) {
+                    System.out.println(index + ". " + opp.getTitle() + " - " + opp.getCompanyName());
+                    System.out.println("   Level: " + opp.getLevel() + ", Status: " + opp.getStatus());
                 
                 // Display preferred major if set
                 if (opp.getPreferredMajor() != null && !opp.getPreferredMajor().isEmpty()) {
@@ -335,16 +445,6 @@ public class Main {
             }
         }
 
-        private void viewAvailableInternships() {
-            Set<InternshipOpportunity> opportunities = internshipController.getVisibleOpportunities();
-            System.out.println("\n--- Available Internships ---");
-            if (opportunities.isEmpty()) {
-                System.out.println("No internships available at the moment.");
-            } else {
-                displayInternshipList(new ArrayList<>(opportunities));
-            }
-        }
-
         private void viewMyApplications(Student student) {
             List<Application> applications = student.getApplications();
             System.out.println("\n--- My Applications ---");
@@ -354,7 +454,7 @@ public class Main {
                 int index = 1;
                 for (Application app : applications) {
                     System.out.println(index + ". " + app.getOpportunity().getTitle() + 
-                                     " - Status: " + app.getStatus());
+                                     " - Status: " + getApplicationStatusDisplay(app.getStatus()));
                     index++;
                 }
             }
@@ -367,6 +467,9 @@ public class Main {
                 System.out.println("Internships are filtered by your year, major, and eligibility.");
                 return;
             }
+
+            // Sort alphabetically by title (default sorting per assignment)
+            opportunities.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
 
             System.out.println("\n--- Available Internships (Filtered for You) ---");
             for (int i = 0; i < opportunities.size(); i++) {
@@ -392,7 +495,7 @@ public class Main {
                 } catch (ApplicationException e) {
                     System.out.println("Application failed: " + e.getMessage());
                 }
-            } else {
+                } else {
                 System.out.println("Invalid selection.");
             }
         }
@@ -544,8 +647,12 @@ public class Main {
                 opp.setLevel(InternshipLevel.BASIC);
             }
             
-            System.out.print("Enter total slots: ");
+            System.out.print("Enter total slots (max 10): ");
             int slots = getIntInput();
+            if (slots < 1 || slots > 10) {
+                System.out.println("Invalid slots. Must be between 1 and 10. Setting to 5.");
+                slots = 5;
+            }
             opp.setTotalSlots(slots);
             
             System.out.print("Enter open date (YYYY-MM-DD): ");
@@ -636,10 +743,14 @@ public class Main {
                     }
                 }
                 
-                System.out.print("New total slots (0 to keep current): ");
+                System.out.print("New total slots (0 to keep current, max 10): ");
                 int slots = getIntInput();
                 if (slots > 0) {
-                    selected.setTotalSlots(slots);
+                    if (slots > 10) {
+                        System.out.println("Maximum 10 slots allowed. Keeping current.");
+                    } else {
+                        selected.setTotalSlots(slots);
+                    }
                 }
                 
                 System.out.println("Internship updated successfully!");
@@ -728,7 +839,7 @@ public class Main {
                         Student student = app.getStudent();
                         System.out.println("  " + (i + 1) + ". " + student.getName() + 
                                          " (Year " + student.getYear() + ", " + student.getMajor() + ")");
-                        System.out.println("     Status: " + app.getStatus());
+                        System.out.println("     Status: " + getApplicationStatusDisplay(app.getStatus()));
                     }
                 }
             }
@@ -867,6 +978,9 @@ public class Main {
                 return;
             }
             
+            // Sort alphabetically by title
+            pending.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
+            
             System.out.println("\n--- Pending Internship Opportunities ---");
             for (int i = 0; i < pending.size(); i++) {
                 InternshipOpportunity opp = pending.get(i);
@@ -919,6 +1033,8 @@ public class Main {
             for (int i = 0; i < pending.size(); i++) {
                 CompanyRepresentative rep = pending.get(i);
                 System.out.println((i + 1) + ". " + rep.getName() + " - " + rep.getCompanyName());
+                System.out.println("   Department: " + rep.getDepartment() + ", Position: " + rep.getPosition());
+                System.out.println("   User ID: " + rep.getId());
             }
             
             System.out.print("Select representative to review (number): ");
@@ -940,46 +1056,6 @@ public class Main {
                 }
             } else {
                 System.out.println("Invalid selection. Please enter a number between 1 and " + pending.size());
-            }
-        }
-
-        private void reviewApplications(CareerCenterStaff staff) {
-            List<Application> applications = applicationController.getAllApplications();
-            List<Application> pending = new java.util.ArrayList<>();
-            
-            for (Application app : applications) {
-                if (app.getStatus() == ApplicationStatus.PENDING) {
-                    pending.add(app);
-                }
-            }
-            
-            if (pending.isEmpty()) {
-                System.out.println("No pending applications to review.");
-                return;
-            }
-            
-            System.out.println("\n--- Pending Applications ---");
-            for (int i = 0; i < pending.size(); i++) {
-                Application app = pending.get(i);
-                System.out.println((i + 1) + ". " + app.getStudent().getName() + 
-                                 " applied for " + app.getOpportunity().getTitle());
-            }
-            
-            System.out.print("Select application to review (number): ");
-            int choice = getIntInput();
-            
-            if (choice > 0 && choice <= pending.size()) {
-                Application selected = pending.get(choice - 1);
-                System.out.print("Decision (ACCEPTED/REJECTED): ");
-                String decisionStr = scanner.nextLine().trim().toUpperCase();
-                
-                try {
-                    ApplicationStatus decision = ApplicationStatus.valueOf(decisionStr);
-                    applicationController.review(selected.getOpportunity(), selected, decision);
-                    System.out.println("Application reviewed: " + decision);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Invalid decision.");
-                }
             }
         }
 
@@ -1174,6 +1250,8 @@ public class Main {
                 
                 String status = rep.getIsApproved() ? "APPROVED" : "PENDING";
                 System.out.println(rep.getName() + " (" + rep.getCompanyName() + "): " + status);
+                System.out.println("  Department: " + rep.getDepartment() + ", Position: " + rep.getPosition());
+                System.out.println("  User ID: " + rep.getId());
                 
                 if (rep.getIsApproved()) {
                     approved++;
@@ -1194,6 +1272,11 @@ public class Main {
             System.out.println("\n--- All Internship Opportunities ---");
             if (all.isEmpty()) {
                 System.out.println("No internships in the system.");
+            } else {
+                // Sort alphabetically and display
+                List<InternshipOpportunity> sorted = new ArrayList<>(all);
+                sorted.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
+                displayInternshipList(sorted);
             }
         }
 
@@ -1228,9 +1311,9 @@ public class Main {
 
         private void handleLogout() {
             if (currentUser != null) {
-                authController.logout(currentUser);
-                currentUser = null;
-                System.out.println("Logged out successfully.");
+            authController.logout(currentUser);
+            currentUser = null;
+            System.out.println("Logged out successfully.");
             } else {
                 System.out.println("No user is currently logged in.");
             }
@@ -1244,6 +1327,41 @@ public class Main {
             return "Unknown";
         }
 
+        /**
+         * Converts internal ApplicationStatus enum to user-friendly display text.
+         * 
+         * <p>This method provides a mapping between internal status values
+         * and the terminology specified in the assignment requirements.
+         * It ensures consistent and user-friendly status messages throughout
+         * the application.</p>
+         * 
+         * <p>Status Mappings:</p>
+         * <ul>
+         *   <li>PENDING → "Pending" (awaiting company review)</li>
+         *   <li>ACCEPTED → "Successful" (approved by company, awaiting student confirmation)</li>
+         *   <li>REJECTED → "Unsuccessful" (rejected by company)</li>
+         *   <li>WITHDRAWN → "Withdrawn" (withdrawn by student)</li>
+         * </ul>
+         * 
+         * @param status the ApplicationStatus enum value to convert
+         * @return user-friendly status string suitable for display, or "Unknown" if status is null
+         */
+        private String getApplicationStatusDisplay(ApplicationStatus status) {
+            if (status == null) return "Unknown";
+            switch (status) {
+                case PENDING:
+                    return "Pending";
+                case ACCEPTED:
+                    return "Successful";
+                case REJECTED:
+                    return "Unsuccessful";
+                case WITHDRAWN:
+                    return "Withdrawn";
+                default:
+                    return status.toString();
+            }
+        }
+
         private int getIntInput() {
             try {
                 int input = Integer.parseInt(scanner.nextLine().trim());
@@ -1253,6 +1371,38 @@ public class Main {
             }
         }
 
+        /**
+         * Loads all system data from pipe-delimited text files.
+         * 
+         * <p>This method orchestrates the complete data loading sequence,
+         * reading from three main data files:</p>
+         * <ol>
+         *   <li>users.txt - User accounts (Students, Company Reps, Staff)</li>
+         *   <li>internships.txt - Internship opportunities with all details</li>
+         *   <li>applications.txt - Student applications linked to internships</li>
+         * </ol>
+         * 
+         * <p>The loading process maintains referential integrity by:</p>
+         * <ul>
+         *   <li>Loading users first to establish base entities</li>
+         *   <li>Loading internships second, linking to Company Representatives</li>
+         *   <li>Loading applications last, linking to both Students and Internships</li>
+         * </ul>
+         * 
+         * <p>After successful loading, displays a summary including:</p>
+         * <ul>
+         *   <li>Count of loaded entities (users, internships, applications)</li>
+         *   <li>Sample login credentials for testing</li>
+         * </ul>
+         * 
+         * <p>Error Handling:</p>
+         * If files are missing or corrupted, catches DataAccessException
+         * and displays a warning, allowing the system to start with empty data.
+         * 
+         * @see DataManager#loadUsers(String)
+         * @see DataManager#loadInternships(String, List)
+         * @see DataManager#loadApplications(String, List, List)
+         */
         private void loadDataFromFiles() {
             try {
                 // Load users first
@@ -1277,9 +1427,9 @@ public class Main {
                 System.out.println("- Loaded " + internships.size() + " internships");
                 System.out.println("- Loaded " + applications.size() + " applications");
                 System.out.println("\nSample Login Credentials:");
-                System.out.println("- Student: Alice (password: password)");
-                System.out.println("- Company Rep: John (password: password)");
-                System.out.println("- Staff: Admin (password: password)");
+                System.out.println("- Student: U2345123F (Alice, password: password)");
+                System.out.println("- Company Rep: john@techcorp.com (John Smith, password: password)");
+                System.out.println("- Staff: admin@ntu.edu.sg (Admin, password: password)");
                 
             } catch (DataAccessException e) {
                 System.out.println("Warning: Could not load data from files: " + e.getMessage());
