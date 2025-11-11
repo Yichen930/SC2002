@@ -60,11 +60,11 @@ public class Main {
      */
     static class CLI {
         private Scanner scanner;
-        private AuthController authController;
-        private ApplicationController applicationController;
-        private InternshipController internshipController;
-        private RegistrationController registrationController;
-        private DataManager dataManager;
+        private AuthServiceInterface authService;
+        private ApplicationServiceInterface applicationService;
+        private InternshipServiceInterface internshipService;
+        private RegistrationServiceInterface registrationService;
+        private DataAccessInterface dataAccess;
         private User currentUser;
 
         // Filter persistence for user session
@@ -89,11 +89,12 @@ public class Main {
          */
         public CLI() {
             this.scanner = new Scanner(System.in);
-            this.authController = new AuthController();
-            this.applicationController = new ApplicationController();
-            this.internshipController = new InternshipController();
-            this.registrationController = new RegistrationController();
-            this.dataManager = new DataManager();
+            // Dependency Injection: Inject concrete implementations
+            this.authService = new AuthController();
+            this.applicationService = new ApplicationController();
+            this.internshipService = new InternshipController();
+            this.registrationService = new RegistrationController();
+            this.dataAccess = new DataManager();
             
             // Load data from files at startup
             loadDataFromFiles();
@@ -162,7 +163,7 @@ public class Main {
             }
 
             try {
-                currentUser = authController.authenticate(userId, password);
+                currentUser = authService.authenticate(userId, password);
                 if (currentUser != null) {
                     System.out.println("Login successful! Welcome, " + currentUser.getName() + "!");
                 } else {
@@ -192,7 +193,7 @@ public class Main {
                 return;
             }
 
-            boolean success = registrationController.registerCompanyRepresentative(name, email, companyName, department, position, password);
+            boolean success = registrationService.registerCompanyRepresentative(name, email, companyName, department, position, password);
             if (success) {
                 System.out.println("Company representative registered successfully!");
                 System.out.println("Your User ID is: " + email);
@@ -386,14 +387,14 @@ public class Main {
             System.out.print("Choose filter option: ");
             
             int filterChoice = getIntInput();
-            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
+            List<InternshipOpportunity> opportunities = internshipService.getFilteredOpportunities(student);
             
             if (filterChoice == 2) {
                 System.out.print("Enter level (BASIC/INTERMEDIATE/ADVANCED): ");
                 String levelStr = scanner.nextLine().trim().toUpperCase();
                 try {
                     InternshipLevel level = InternshipLevel.valueOf(levelStr);
-                    opportunities = internshipController.filterByLevel(opportunities, level);
+                    opportunities = internshipService.filterByLevel(opportunities, level);
                     // Save filter for next time
                     lastFilterLevel = level;
                     hasLevelFilter = true;
@@ -403,7 +404,7 @@ public class Main {
                     hasLevelFilter = false;
                 }
             } else if (filterChoice == 3 && hasLevelFilter && lastFilterLevel != null) {
-                opportunities = internshipController.filterByLevel(opportunities, lastFilterLevel);
+                opportunities = internshipService.filterByLevel(opportunities, lastFilterLevel);
                 System.out.println("Applied last filter: " + lastFilterLevel);
             } else {
                 hasLevelFilter = false;
@@ -461,7 +462,7 @@ public class Main {
         }
 
         private void applyForInternship(Student student) {
-            List<InternshipOpportunity> opportunities = internshipController.getFilteredOpportunities(student);
+            List<InternshipOpportunity> opportunities = internshipService.getFilteredOpportunities(student);
             if (opportunities.isEmpty()) {
                 System.out.println("No internships available to apply for.");
                 System.out.println("Internships are filtered by your year, major, and eligibility.");
@@ -489,7 +490,7 @@ public class Main {
                 try {
                     Application app = new Application(student, selected);
                     student.addApplication(app);
-                    applicationController.addApplication(app);
+                    applicationService.addApplication(app);
                     System.out.println("Application submitted successfully!");
                     System.out.println("Status: PENDING - Awaiting company review");
                 } catch (ApplicationException e) {
@@ -522,7 +523,7 @@ public class Main {
             if (choice > 0 && choice <= acceptedApps.size()) {
                 Application selected = acceptedApps.get(choice - 1);
                 try {
-                    applicationController.accept(student, selected);
+                    applicationService.accept(student, selected);
                     System.out.println("\n✓ Placement confirmed successfully!");
                     System.out.println("Your internship placement is now finalized.");
                     System.out.println("All other applications have been automatically withdrawn.");
@@ -611,7 +612,7 @@ public class Main {
                     return;
                 }
 
-                applicationController.requestForWithdrawal(selected);
+                applicationService.requestForWithdrawal(selected);
                 selected.getWithdrawal().setWithdrawalReason(reason);
                 System.out.println("Withdrawal request submitted successfully.");
                 System.out.println("Staff will review your request.");
@@ -674,7 +675,7 @@ public class Main {
             }
             
             // Add the opportunity directly (staff approval will happen later)
-            internshipController.addOpportunity(opp);
+            internshipService.addOpportunity(opp);
             rep.createInternship(opp);
             System.out.println("Internship opportunity created and submitted for approval!");
         }
@@ -788,7 +789,7 @@ public class Main {
                 String confirm = scanner.nextLine().trim().toLowerCase();
                 
                 if (confirm.equals("yes")) {
-                    boolean deleted = internshipController.deleteOpportunity(rep, selected);
+                    boolean deleted = internshipService.deleteOpportunity(rep, selected);
                     if (deleted) {
                         System.out.println("Internship deleted successfully!");
                     } else {
@@ -814,7 +815,7 @@ public class Main {
                 return;
             }
 
-            List<Application> allApplications = applicationController.getAllApplications();
+            List<Application> allApplications = applicationService.getAllApplications();
             boolean hasApplications = false;
 
             System.out.println("\n=== Applications for My Internships ===");
@@ -857,7 +858,7 @@ public class Main {
             }
 
             List<InternshipOpportunity> myInternships = rep.getCreatedInternships();
-            List<Application> allApplications = applicationController.getAllApplications();
+            List<Application> allApplications = applicationService.getAllApplications();
             List<Application> pendingApplications = new ArrayList<>();
             
             // Find pending applications for this rep's internships
@@ -948,7 +949,7 @@ public class Main {
                 }
                 
                 try {
-                    internshipController.toggleVisibility(selected);
+                    internshipService.toggleVisibility(selected);
                     System.out.println("Visibility toggled! Now: " + (selected.isVisible() ? "Visible" : "Hidden"));
                 } catch (IllegalStateException e) {
                     System.out.println("Error: " + e.getMessage());
@@ -964,7 +965,7 @@ public class Main {
                 return;
             }
 
-            List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
+            List<InternshipOpportunity> allOpps = internshipService.getAllOpportunities();
             List<InternshipOpportunity> pending = new java.util.ArrayList<>();
             
             for (InternshipOpportunity opp : allOpps) {
@@ -996,10 +997,10 @@ public class Main {
                 String decision = scanner.nextLine().trim().toUpperCase();
                 
                 if (decision.equals("A")) {
-                    internshipController.approve(staff, selected);
+                    internshipService.approve(staff, selected);
                     System.out.println("Internship approved!");
                 } else if (decision.equals("R")) {
-                    internshipController.reject(staff, selected);
+                    internshipService.reject(staff, selected);
                     System.out.println("Internship rejected.");
                 } else {
                     System.out.println("Invalid decision. Please enter 'A' or 'R'.");
@@ -1015,7 +1016,7 @@ public class Main {
                 return;
             }
 
-            List<CompanyRepresentative> reps = registrationController.getRepresentatives();
+            List<CompanyRepresentative> reps = registrationService.getRepresentatives();
             List<CompanyRepresentative> pending = new java.util.ArrayList<>();
             
             for (CompanyRepresentative rep : reps) {
@@ -1046,10 +1047,10 @@ public class Main {
                 String decision = scanner.nextLine().trim().toUpperCase();
                 
                 if (decision.equals("A")) {
-                    registrationController.approveRepresentative(staff, selected);
+                    registrationService.approveRepresentative(staff, selected);
                     System.out.println("Company representative approved!");
                 } else if (decision.equals("R")) {
-                    registrationController.rejectRepresentative(staff, selected);
+                    registrationService.rejectRepresentative(staff, selected);
                     System.out.println("Company representative rejected.");
                 } else {
                     System.out.println("Invalid decision. Please enter 'A' or 'R'.");
@@ -1060,7 +1061,7 @@ public class Main {
         }
 
         private void reviewWithdrawalRequests(CareerCenterStaff staff) {
-            List<Application> allApplications = applicationController.getAllApplications();
+            List<Application> allApplications = applicationService.getAllApplications();
             List<Application> pendingWithdrawals = new ArrayList<>();
             
             for (Application app : allApplications) {
@@ -1104,7 +1105,7 @@ public class Main {
                     return;
                 }
                 
-                applicationController.decideWithdrawal(staff, selected, decision);
+                applicationService.decideWithdrawal(staff, selected, decision);
                 
                 if (decision == WithdrawalStatus.APPROVED) {
                     System.out.println("Withdrawal approved. Application marked as WITHDRAWN.");
@@ -1146,7 +1147,7 @@ public class Main {
         }
 
         private void reportInternshipStatusCounts() {
-            List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
+            List<InternshipOpportunity> allOpps = internshipService.getAllOpportunities();
             
             int pending = 0;
             int approved = 0;
@@ -1181,7 +1182,7 @@ public class Main {
         }
 
         private void reportPlacementsByMajor() {
-            List<Application> allApps = applicationController.getAllApplications();
+            List<Application> allApps = applicationService.getAllApplications();
             java.util.Map<String, Integer> placementsByMajor = new java.util.HashMap<>();
             
             for (Application app : allApps) {
@@ -1206,8 +1207,8 @@ public class Main {
         }
 
         private void reportApplicationsPerInternship() {
-            List<InternshipOpportunity> allOpps = internshipController.getAllOpportunities();
-            List<Application> allApps = applicationController.getAllApplications();
+            List<InternshipOpportunity> allOpps = internshipService.getAllOpportunities();
+            List<Application> allApps = applicationService.getAllApplications();
             
             System.out.println("\n=== Applications per Internship ===");
             
@@ -1238,7 +1239,7 @@ public class Main {
         }
 
         private void reportCompanyRepApprovalStatus() {
-            List<CompanyRepresentative> allReps = registrationController.getRepresentatives();
+            List<CompanyRepresentative> allReps = registrationService.getRepresentatives();
             
             int approved = 0;
             int pending = 0;
@@ -1268,7 +1269,7 @@ public class Main {
         }
 
         private void viewAllInternships() {
-            Set<InternshipOpportunity> all = internshipController.showAllInternshipOpportunities();
+            Set<InternshipOpportunity> all = internshipService.showAllInternshipOpportunities();
             System.out.println("\n--- All Internship Opportunities ---");
             if (all.isEmpty()) {
                 System.out.println("No internships in the system.");
@@ -1301,7 +1302,7 @@ public class Main {
                 return;
             }
             
-            boolean success = registrationController.changePassword(currentUser.getName(), oldPassword, newPassword);
+            boolean success = registrationService.changePassword(currentUser.getName(), oldPassword, newPassword);
             if (success) {
                 System.out.println("Password changed successfully!");
             } else {
@@ -1311,7 +1312,7 @@ public class Main {
 
         private void handleLogout() {
             if (currentUser != null) {
-            authController.logout(currentUser);
+            authService.logout(currentUser);
             currentUser = null;
             System.out.println("Logged out successfully.");
             } else {
@@ -1406,20 +1407,20 @@ public class Main {
         private void loadDataFromFiles() {
             try {
                 // Load users first
-                List<User> users = dataManager.loadUsers("users.txt");
-                authController.setUsers(users);
-                registrationController.setUsers(users);
+                List<User> users = dataAccess.loadUsers("users.txt");
+                authService.setUsers(users);
+                registrationService.setUsers(users);
                 
                 // Load internships
-                List<InternshipOpportunity> internships = dataManager.loadInternships("internships.txt", users);
+                List<InternshipOpportunity> internships = dataAccess.loadInternships("internships.txt", users);
                 for (InternshipOpportunity opp : internships) {
-                    internshipController.addOpportunity(opp);
+                    internshipService.addOpportunity(opp);
                 }
                 
                 // Load applications
-                List<Application> applications = dataManager.loadApplications("applications.txt", users, internships);
+                List<Application> applications = dataAccess.loadApplications("applications.txt", users, internships);
                 for (Application app : applications) {
-                    applicationController.addApplication(app);
+                    applicationService.addApplication(app);
                 }
                 
                 System.out.println("Data loaded successfully!");

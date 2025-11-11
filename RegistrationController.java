@@ -1,7 +1,15 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class RegistrationController {
+/**
+ * Implementation of registration services.
+ * 
+ * <p>This class implements the RegistrationServiceInterface, providing
+ * user registration and approval logic with loose coupling.</p>
+ * 
+ * @version 1.0
+ */
+public class RegistrationController implements RegistrationServiceInterface {
     private List<CompanyRepresentative> representatives;
     private List<User> users;
 

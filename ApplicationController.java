@@ -1,7 +1,15 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ApplicationController {
+/**
+ * Implementation of application management services.
+ * 
+ * <p>This class implements the ApplicationServiceInterface, providing
+ * application lifecycle management with loose coupling.</p>
+ * 
+ * @version 1.0
+ */
+public class ApplicationController implements ApplicationServiceInterface {
     private List<Application> applications;
 
     public ApplicationController() {

@@ -4,7 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 
-public class InternshipController {
+/**
+ * Implementation of internship management services.
+ * 
+ * <p>This class implements the InternshipServiceInterface, providing
+ * internship opportunity management with loose coupling.</p>
+ * 
+ * @version 1.0
+ */
+public class InternshipController implements InternshipServiceInterface {
     private List<InternshipOpportunity> opportunities;
 
     public InternshipController() {

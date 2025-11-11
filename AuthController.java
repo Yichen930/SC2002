@@ -1,7 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuthController {
+/**
+ * Implementation of authentication services.
+ * 
+ * <p>This class implements the AuthServiceInterface, providing
+ * concrete authentication logic while allowing for loose coupling
+ * with client code.</p>
+ * 
+ * @version 1.0
+ */
+public class AuthController implements AuthServiceInterface {
     private List<User> users;
 
     public AuthController() {
