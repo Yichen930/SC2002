@@ -115,7 +115,7 @@ public class RegistrationController implements RegistrationServiceInterface {
         return new ArrayList<>(representatives);
     }
 
-    private void writeUsersToFile(String filepath) throws java.io.IOException {
+        private void writeUsersToFile(String filepath) throws java.io.IOException {
         if (filepath == null) throw new java.io.IOException("Invalid filepath");
 
         try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(filepath))) {
@@ -130,13 +130,13 @@ public class RegistrationController implements RegistrationServiceInterface {
             for (User user : users) {
                 if (user instanceof Student) {
                     Student s = (Student) user;
-                    pw.printf("STUDENT|%s|%s|%s|%s|%d\n", s.getId(), s.getName(), s.getPassword(), s.getMajor(), s.getYear());
+                    pw.printf("STUDENT|%s|%s|%s|%s|%d\n", s.getId(), s.getName(), s.getPasswordForPersistence(), s.getMajor(), s.getYear());
                 } else if (user instanceof CompanyRepresentative) {
                     CompanyRepresentative r = (CompanyRepresentative) user;
-                    pw.printf("COMPANY_REP|%s|%s|%s|%s|%s|%s|%b\n", r.getId(), r.getName(), r.getPassword(), r.getCompanyName(), r.getDepartment(), r.getPosition(), r.getIsApproved());
+                    pw.printf("COMPANY_REP|%s|%s|%s|%s|%s|%s|%b\n", r.getId(), r.getName(), r.getPasswordForPersistence(), r.getCompanyName(), r.getDepartment(), r.getPosition(), r.getIsApproved());
                 } else if (user instanceof CareerCenterStaff) {
                     CareerCenterStaff st = (CareerCenterStaff) user;
-                    pw.printf("STAFF|%s|%s|%s|%s\n", st.getId(), st.getName(), st.getPassword(), st.getDepartment());
+                    pw.printf("STAFF|%s|%s|%s|%s\n", st.getId(), st.getName(), st.getPasswordForPersistence(), st.getDepartment());
                 }
             }
         }

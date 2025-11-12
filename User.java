@@ -35,12 +35,11 @@ public abstract class User {
     public void setPassword(String newPassword) {
         this.password = newPassword;
     }
-
     /**
-     * Returns the current password for persistence.
-     * Note: This is provided for assignment persistence only.
+     * Package-private method for persistence only.
+     * Not exposed as public API.
      */
-    public String getPassword() {
+    String getPasswordForPersistence() {
         return this.password;
     }
 
