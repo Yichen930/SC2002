@@ -36,6 +36,14 @@ public abstract class User {
         this.password = newPassword;
     }
 
+    /**
+     * Returns the current password for persistence.
+     * Note: This is provided for assignment persistence only.
+     */
+    public String getPassword() {
+        return this.password;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

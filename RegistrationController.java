@@ -42,6 +42,17 @@ public class RegistrationController implements RegistrationServiceInterface {
 
         representatives.add(newRep);
         users.add(newRep);
+
+        // Persist users to file
+        try {
+            writeUsersToFile("users.txt");
+        } catch (Exception e) {
+            // If persistence fails, remove newly added user to avoid inconsistent runtime state
+            representatives.remove(newRep);
+            users.remove(newRep);
+            return false;
+        }
+
         return true;
     }
 
@@ -61,14 +72,25 @@ public class RegistrationController implements RegistrationServiceInterface {
         return true;
     }
 
-    public boolean changePassword(String username, String oldPassword, String newPassword) {
-        if (username == null || oldPassword == null || newPassword == null) {
+    public boolean changePassword(String userId, String oldPassword, String newPassword) {
+        if (userId == null || oldPassword == null || newPassword == null) {
             return false;
         }
 
+        // Lookup by user ID (email for company reps, student/staff IDs)
         for (User user : users) {
-            if (user.getName() != null && user.getName().equals(username)) {
-                return user.changePassword(oldPassword, newPassword);
+            if (user.getId() != null && user.getId().equals(userId)) {
+                boolean changed = user.changePassword(oldPassword, newPassword);
+                if (changed) {
+                    try {
+                        writeUsersToFile("users.txt");
+                    } catch (Exception e) {
+                        // rollback password change on failure to persist
+                        user.changePassword(newPassword, oldPassword);
+                        return false;
+                    }
+                }
+                return changed;
             }
         }
 
@@ -91,6 +113,33 @@ public class RegistrationController implements RegistrationServiceInterface {
 
     public List<CompanyRepresentative> getRepresentatives() {
         return new ArrayList<>(representatives);
+    }
+
+    private void writeUsersToFile(String filepath) throws java.io.IOException {
+        if (filepath == null) throw new java.io.IOException("Invalid filepath");
+
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(filepath))) {
+            // Write header/comments similar to sample file
+            pw.println("# User Data File");
+            pw.println("# Format: TYPE|ID|NAME|PASSWORD|ROLE_SPECIFIC_FIELDS");
+            pw.println("# STUDENT: TYPE|ID|NAME|PASSWORD|MAJOR|YEAR");
+            pw.println("# COMPANY_REP: TYPE|ID|NAME|PASSWORD|COMPANY_NAME|DEPARTMENT|POSITION|IS_APPROVED");
+            pw.println("# STAFF: TYPE|ID|NAME|PASSWORD|DEPARTMENT");
+            pw.println();
+
+            for (User user : users) {
+                if (user instanceof Student) {
+                    Student s = (Student) user;
+                    pw.printf("STUDENT|%s|%s|%s|%s|%d\n", s.getId(), s.getName(), s.getPassword(), s.getMajor(), s.getYear());
+                } else if (user instanceof CompanyRepresentative) {
+                    CompanyRepresentative r = (CompanyRepresentative) user;
+                    pw.printf("COMPANY_REP|%s|%s|%s|%s|%s|%s|%b\n", r.getId(), r.getName(), r.getPassword(), r.getCompanyName(), r.getDepartment(), r.getPosition(), r.getIsApproved());
+                } else if (user instanceof CareerCenterStaff) {
+                    CareerCenterStaff st = (CareerCenterStaff) user;
+                    pw.printf("STAFF|%s|%s|%s|%s\n", st.getId(), st.getName(), st.getPassword(), st.getDepartment());
+                }
+            }
+        }
     }
 }
 

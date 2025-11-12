@@ -51,12 +51,12 @@ public interface RegistrationServiceInterface {
     /**
      * Changes a user's password.
      * 
-     * @param username the username
+    * @param username the user ID (student ID or email for company representatives)
      * @param oldPassword current password for verification
      * @param newPassword new password to set
      * @return true if password changed successfully, false otherwise
      */
-    boolean changePassword(String username, String oldPassword, String newPassword);
+    boolean changePassword(String userId, String oldPassword, String newPassword);
     
     /**
      * Sets the user repository for registration operations.

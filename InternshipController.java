@@ -92,7 +92,25 @@ public class InternshipController implements InternshipServiceInterface {
     }
 
     public void addOpportunity(InternshipOpportunity opp) {
-        if (opp != null && !opportunities.contains(opp)) {
+        if (opp == null) return;
+
+        // Basic validation: title and company required
+        if (opp.getTitle() == null || opp.getTitle().trim().isEmpty() || opp.getCompanyName() == null || opp.getCompanyName().trim().isEmpty()) {
+            return;
+        }
+
+        // Slots validation
+        if (opp.getTotalSlots() <= 0 || opp.getTotalSlots() > 10) {
+            return;
+        }
+
+        // Rep approval and per-rep active count enforcement
+        CompanyRepresentative rep = opp.getRepInCharge();
+        if (rep == null) return;
+        if (!rep.getIsApproved()) return; // only approved reps may add opportunities in backend
+        if (rep.countActiveInternships() >= 5) return; // enforce 5 active internships limit
+
+        if (!opportunities.contains(opp)) {
             opportunities.add(opp);
         }
     }

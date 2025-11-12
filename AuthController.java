@@ -22,15 +22,33 @@ public class AuthController implements AuthServiceInterface {
             throw new AuthenticationException("Username and password cannot be null");
         }
 
+        // First try to find user by ID
+        User found = null;
         for (User user : users) {
-            if (user.getName() != null && user.getName().equals(username)) {
-                if (user.verifyPassword(password)) {
-                    return user;
-                }
+            if (user != null && user.getId() != null && user.getId().equals(username)) {
+                found = user;
+                break;
             }
         }
 
-        throw new AuthenticationException("Invalid username or password");
+        if (found == null) {
+            throw new AuthenticationException("Invalid ID");
+        }
+
+        // If the account is a company representative, ensure it's approved before allowing login
+        if (found instanceof CompanyRepresentative) {
+            CompanyRepresentative rep = (CompanyRepresentative) found;
+            if (!rep.getIsApproved()) {
+                throw new AuthenticationException("Account not approved");
+            }
+        }
+
+        // ID found and account authorized (if applicable), now verify password
+        if (!found.verifyPassword(password)) {
+            throw new AuthenticationException("Incorrect password");
+        }
+
+        return found;
     }
 
     public void logout(User user) {

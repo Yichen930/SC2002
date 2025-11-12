@@ -123,4 +123,13 @@ public class Application {
                 ", opportunity=" + (opp != null ? opp.getTitle() : "null") +
                 '}';
     }
+
+    // Expose timestamps for persistence
+    public java.time.LocalDate getCreatedAt() {
+        return createdAt;
+    }
+
+    public java.time.LocalDate getUpdatedAt() {
+        return updatedAt;
+    }
 }
