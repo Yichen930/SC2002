@@ -91,4 +91,4 @@ Exceptions: ApplicationException, AuthenticationException, AuthorizationExceptio
 ## License
 
 Developed for academic purposes as part of NTU SC2002 coursework.
-Authors: Kannan Priyadharshan, 
+Authors: Kannan Priyadharshan, Gong Yichen, Arthur Lee Jian You, Tan Xin Yu, Harsh Kamdar
