@@ -35,6 +35,13 @@ public abstract class User {
     public void setPassword(String newPassword) {
         this.password = newPassword;
     }
+    /**
+     * Package-private method for persistence only.
+     * Not exposed as public API.
+     */
+    String getPasswordForPersistence() {
+        return this.password;
+    }
 
     @Override
     public boolean equals(Object o) {

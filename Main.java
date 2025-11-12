@@ -115,7 +115,9 @@ public class Main {
          * Representative, or Career Center Staff).</p>
          */
         public void run() {
-            System.out.println("=== Internship Management System ===");
+            System.out.println("=============================================");
+            System.out.println("Welcome to the Internship Placement Management System!");
+            System.out.println("=============================================");
             
             while (true) {
                 if (currentUser == null) {
@@ -153,7 +155,7 @@ public class Main {
 
         private void handleLogin() {
             System.out.print("Enter User ID (e.g., U2345123F, john@techcorp.com, admin@ntu.edu.sg): ");
-            String userId = scanner.nextLine().trim();
+                String userId = scanner.nextLine().trim();
             System.out.print("Enter password: ");
             String password = scanner.nextLine().trim();
 
@@ -1302,9 +1304,12 @@ public class Main {
                 return;
             }
             
-            boolean success = registrationService.changePassword(currentUser.getName(), oldPassword, newPassword);
+            // Use user ID for password change to avoid ambiguity from duplicate names
+            boolean success = registrationService.changePassword(currentUser.getId(), oldPassword, newPassword);
             if (success) {
-                System.out.println("Password changed successfully!");
+                System.out.println("Password changed successfully! You will be logged out and must re-login with the new password.");
+                // Force logout so user must re-authenticate with new password
+                handleLogout();
             } else {
                 System.out.println("Failed to change password. Check your current password.");
             }
