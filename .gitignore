@@ -1,1 +1,13 @@
+# Java compiled files
 *.class
+
+# Compiled output directory
+bin/
+
+# IDE configuration
+.idea/
+.vscode/
+*.iml
+
+# macOS system files
+.DS_Store

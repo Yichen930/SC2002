@@ -100,62 +100,75 @@ java -cp bin Main
 
 ```
 SC2002/
-├── src/                                    # Source code directory
+├── src/                                    # Source code
+│   ├── Main.java                           # CLI entry point
+│   │
 │   ├── Entity Classes:
-│   │   ├── User.java (abstract base)
+│   │   ├── User.java                       # Abstract base user class
 │   │   ├── Student.java
 │   │   ├── CompanyRepresentative.java
 │   │   ├── CareerCenterStaff.java
 │   │   ├── Application.java
 │   │   ├── InternshipOpportunity.java
 │   │   └── WithdrawalRequest.java
+│   │
 │   ├── Service Interfaces:
 │   │   ├── AuthServiceInterface.java
 │   │   ├── ApplicationServiceInterface.java
 │   │   ├── InternshipServiceInterface.java
 │   │   ├── RegistrationServiceInterface.java
 │   │   └── DataAccessInterface.java
+│   │
 │   ├── Controllers:
 │   │   ├── AuthController.java
 │   │   ├── ApplicationController.java
 │   │   ├── InternshipController.java
 │   │   ├── RegistrationController.java
 │   │   └── DataManager.java
+│   │
 │   ├── Utilities:
-│   │   ├── ColorUtil.java (ANSI color output)
-│   │   ├── SystemLogger.java (audit logging)
-│   │   ├── StatisticsUtil.java (statistics generation)
-│   │   └── SearchUtil.java (advanced search)
+│   │   ├── ColorUtil.java                  # ANSI color output
+│   │   ├── SystemLogger.java               # Audit logging
+│   │   ├── StatisticsUtil.java             # Statistics generation
+│   │   └── SearchUtil.java                 # Advanced search
+│   │
 │   ├── Enums:
 │   │   ├── ApplicationStatus.java
 │   │   ├── InternshipStatus.java
 │   │   ├── InternshipLevel.java
 │   │   └── WithdrawalStatus.java
-│   ├── Exceptions:
-│   │   ├── ApplicationException.java
-│   │   ├── AuthenticationException.java
-│   │   ├── AuthorizationException.java
-│   │   └── DataAccessException.java
-│   └── Main.java (CLI entry point)
+│   │
+│   └── Exceptions:
+│       ├── ApplicationException.java
+│       ├── AuthenticationException.java
+│       ├── AuthorizationException.java
+│       └── DataAccessException.java
+│
 ├── data/                                   # Persistent data files
 │   ├── users.txt                           # User accounts
 │   ├── internships.txt                     # Internship listings
 │   └── applications.txt                    # Student applications
-├── bin/                                    # Compiled .class files (generated)
-├── docs/
-│   └── javadoc/                            # JavaDoc API documentation (generated)
-├── logs/                                   # System logs (generated)
-│   └── system.log
+│
+├── bin/                                    # Compiled .class files (auto-generated)
+│
+├── javadoc/                                # JavaDoc API documentation (auto-generated)
+│   ├── index.html                          # Main documentation page
+│   ├── allclasses-index.html
+│   ├── package-summary.html
+│   └── ... (HTML docs for all classes)
+│
 ├── UML/                                    # UML diagrams
+│
 └── README.md                               # This file
 ```
 
 ## Documentation
 
-- **API Documentation**: Open `docs/javadoc/index.html` in a browser to view JavaDoc
-- **System Logs**: Check `logs/system.log` for detailed operation history
+- **API Documentation**: Open `javadoc/index.html` in a browser to view JavaDoc
+- **System Logs**: Check logs directory for detailed operation history
 
 ## License
 
 Developed for academic purposes as part of NTU SC2002 coursework.
-Authors: Kannan Priyadharshan, Gong Yichen, Arthur Lee Jian You, Tan Xin Yu, Harsh Kamdar
+
+**Authors:** Kannan Priyadharshan, Gong Yichen, Arthur Lee Jian You, Tan Xin Yu, Harsh Kamdar
