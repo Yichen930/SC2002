@@ -9,17 +9,29 @@ A Java command-line application for managing internship opportunities, student a
 - Apply for up to 3 internships simultaneously
 - Accept placement confirmations
 - Request withdrawals
+- **Search internships** by company, title, or level
+- **View statistics** on application performance
 
 ### Company Representatives
 - Create and manage up to 5 active internships
 - Review and approve student applications
 - Toggle internship visibility
 - Set slots (max 10), levels, and preferred majors
+- **View statistics** on internship applications
 
 ### Career Center Staff
 - Approve internship postings and company registrations
 - Manage withdrawal requests
 - Generate reports on placements and applications
+- **Search internships** across all companies
+- **View system-wide statistics**
+
+### Additional Features
+- **File-based persistence** with write-back support (auto-save on user registration and password changes)
+- **Colored CLI output** for better user experience (green for success, red for errors, etc.)
+- **Comprehensive logging** to `logs/system.log` for audit trails
+- **Statistics dashboard** for all user roles
+- **Advanced search** with flexible filtering options
 
 ## Architecture
 
@@ -37,12 +49,17 @@ A Java command-line application for managing internship opportunities, student a
 ## Quick Start
 
 ```bash
-# Compile
-javac *.java
+# First time setup: Create bin directory
+mkdir -p bin
+
+# Compile (generates .class files in bin/)
+javac src/*.java -d bin
 
 # Run
-java Main
+java -cp bin Main
 ```
+
+**Note:** The `-d bin` flag separates compiled `.class` files from source code for better organization.
 
 ## Sample Credentials
 
@@ -75,18 +92,68 @@ java Main
 
 - **Interface-based architecture** for testability and loose coupling
 - **Two-step approval** ensures both parties commit
-- **Read-only data access** per assignment requirements (no persistence)
+- **File-based persistence** with selective write-back (user registration)
 - **Exception hierarchy** for granular error handling
+- **Enum-based state management** for type safety and simplicity
 
 ## Project Structure
 
 ```
-Entity Classes: User, Student, CompanyRepresentative, Application, InternshipOpportunity
-Service Interfaces: AuthServiceInterface, ApplicationServiceInterface, InternshipServiceInterface
-Controllers: AuthController, ApplicationController, InternshipController, DataManager
-Enums: ApplicationStatus, InternshipStatus, InternshipLevel, WithdrawalStatus
-Exceptions: ApplicationException, AuthenticationException, AuthorizationException
+SC2002/
+├── src/                                    # Source code directory
+│   ├── Entity Classes:
+│   │   ├── User.java (abstract base)
+│   │   ├── Student.java
+│   │   ├── CompanyRepresentative.java
+│   │   ├── CareerCenterStaff.java
+│   │   ├── Application.java
+│   │   ├── InternshipOpportunity.java
+│   │   └── WithdrawalRequest.java
+│   ├── Service Interfaces:
+│   │   ├── AuthServiceInterface.java
+│   │   ├── ApplicationServiceInterface.java
+│   │   ├── InternshipServiceInterface.java
+│   │   ├── RegistrationServiceInterface.java
+│   │   └── DataAccessInterface.java
+│   ├── Controllers:
+│   │   ├── AuthController.java
+│   │   ├── ApplicationController.java
+│   │   ├── InternshipController.java
+│   │   ├── RegistrationController.java
+│   │   └── DataManager.java
+│   ├── Utilities:
+│   │   ├── ColorUtil.java (ANSI color output)
+│   │   ├── SystemLogger.java (audit logging)
+│   │   ├── StatisticsUtil.java (statistics generation)
+│   │   └── SearchUtil.java (advanced search)
+│   ├── Enums:
+│   │   ├── ApplicationStatus.java
+│   │   ├── InternshipStatus.java
+│   │   ├── InternshipLevel.java
+│   │   └── WithdrawalStatus.java
+│   ├── Exceptions:
+│   │   ├── ApplicationException.java
+│   │   ├── AuthenticationException.java
+│   │   ├── AuthorizationException.java
+│   │   └── DataAccessException.java
+│   └── Main.java (CLI entry point)
+├── data/                                   # Persistent data files
+│   ├── users.txt                           # User accounts
+│   ├── internships.txt                     # Internship listings
+│   └── applications.txt                    # Student applications
+├── bin/                                    # Compiled .class files (generated)
+├── docs/
+│   └── javadoc/                            # JavaDoc API documentation (generated)
+├── logs/                                   # System logs (generated)
+│   └── system.log
+├── UML/                                    # UML diagrams
+└── README.md                               # This file
 ```
+
+## Documentation
+
+- **API Documentation**: Open `docs/javadoc/index.html` in a browser to view JavaDoc
+- **System Logs**: Check `logs/system.log` for detailed operation history
 
 ## License
 
