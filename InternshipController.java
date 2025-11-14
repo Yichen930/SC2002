@@ -19,40 +19,40 @@ public class InternshipController implements InternshipServiceInterface {
         this.opportunities = new ArrayList<>();
     }
 
-    public boolean create(CareerCenterStaff staff, InternshipOpportunity app) {
-        if (staff == null || app == null) {
+    public boolean create(CareerCenterStaff staff, InternshipOpportunity opp) {
+        if (staff == null || opp == null) {
             return false;
         }
 
-        if (app.getTitle() == null || app.getCompanyName() == null) {
+        if (opp.getTitle() == null || opp.getCompanyName() == null) {
             return false;
         }
 
-        if (!opportunities.contains(app)) {
-            opportunities.add(app);
+        if (!opportunities.contains(opp)) {
+            opportunities.add(opp);
             return true;
         }
 
         return false;
     }
 
-    public void approve(CareerCenterStaff staff, InternshipOpportunity app) {
-        if (staff == null || app == null) {
+    public void approve(CareerCenterStaff staff, InternshipOpportunity opp) {
+        if (staff == null || opp == null) {
             return;
         }
 
-        if (app.getStatus() == InternshipStatus.PENDING) {
-            app.setStatus(InternshipStatus.APPROVED);
+        if (opp.getStatus() == InternshipStatus.PENDING) {
+            opp.setStatus(InternshipStatus.APPROVED);
         }
     }
 
-    public void reject(CareerCenterStaff staff, InternshipOpportunity app) {
-        if (staff == null || app == null) {
+    public void reject(CareerCenterStaff staff, InternshipOpportunity opp) {
+        if (staff == null || opp == null) {
             return;
         }
 
-        if (app.getStatus() == InternshipStatus.PENDING) {
-            app.setStatus(InternshipStatus.REJECTED);
+        if (opp.getStatus() == InternshipStatus.PENDING) {
+            opp.setStatus(InternshipStatus.REJECTED);
         }
     }
 
