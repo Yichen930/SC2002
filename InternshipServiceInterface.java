@@ -23,26 +23,26 @@ public interface InternshipServiceInterface {
      * Creates a new internship opportunity.
      * 
      * @param staff the staff member creating (or null if by rep)
-     * @param app the internship opportunity to create
+     * @param opp the internship opportunity to create
      * @return true if creation successful, false otherwise
      */
-    boolean create(CareerCenterStaff staff, InternshipOpportunity app);
+    boolean create(CareerCenterStaff staff, InternshipOpportunity opp);
     
     /**
      * Approves a pending internship opportunity.
      * 
      * @param staff the staff member approving
-     * @param app the internship to approve
+     * @param opp the internship to approve
      */
-    void approve(CareerCenterStaff staff, InternshipOpportunity app);
+    void approve(CareerCenterStaff staff, InternshipOpportunity opp);
     
     /**
      * Rejects a pending internship opportunity.
      * 
      * @param staff the staff member rejecting
-     * @param app the internship to reject
+     * @param opp the internship to reject
      */
-    void reject(CareerCenterStaff staff, InternshipOpportunity app);
+    void reject(CareerCenterStaff staff, InternshipOpportunity opp);
     
     /**
      * Toggles the visibility of an internship opportunity.

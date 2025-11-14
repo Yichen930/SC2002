@@ -51,7 +51,7 @@ public interface RegistrationServiceInterface {
     /**
      * Changes a user's password.
      * 
-    * @param username the user ID (student ID or email for company representatives)
+    * @param userId the user ID (student ID or email for company representatives)
      * @param oldPassword current password for verification
      * @param newPassword new password to set
      * @return true if password changed successfully, false otherwise
