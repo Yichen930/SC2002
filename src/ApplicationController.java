@@ -129,6 +129,13 @@ public class ApplicationController implements ApplicationServiceInterface {
             }
         }
     }
+    
+    // Internal method for loading applications without triggering save
+    public void loadApplication(Application app) {
+        if (app != null && !applications.contains(app)) {
+            applications.add(app);
+        }
+    }
 
     public List<Application> getAllApplications() {
         return new ArrayList<>(applications);

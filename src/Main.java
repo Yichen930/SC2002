@@ -160,7 +160,7 @@ public class Main {
             String password = scanner.nextLine().trim();
 
             if (userId.isEmpty() || password.isEmpty()) {
-                System.out.println("User ID and password cannot be empty.");
+                System.out.println(ColorUtil.colored("User ID and password cannot be empty.", ColorUtil.RED));
                 return;
             }
 
@@ -527,8 +527,8 @@ public class Main {
         private void acceptPlacementConfirmation(Student student) {
             List<Application> acceptedApps = student.getSuccessfulApplications();
             if (acceptedApps.isEmpty()) {
-                System.out.println("You have no approved applications awaiting your confirmation.");
-                System.out.println("Applications must be approved by the company representative first.");
+                System.out.println(ColorUtil.colored("You have no approved applications awaiting your confirmation.", ColorUtil.YELLOW));
+                System.out.println(ColorUtil.colored("Applications must be approved by the company representative first.", ColorUtil.YELLOW));
                 return;
             }
 
@@ -547,9 +547,9 @@ public class Main {
                 Application selected = acceptedApps.get(choice - 1);
                 try {
                     applicationService.accept(student, selected);
-                    System.out.println("\n✓ Placement confirmed successfully!");
-                    System.out.println("Your internship placement is now finalized.");
-                    System.out.println("All other applications have been automatically withdrawn.");
+                    System.out.println(ColorUtil.colored("\n✓ Placement confirmed successfully!", ColorUtil.GREEN));
+                    System.out.println(ColorUtil.colored("Your internship placement is now finalized.", ColorUtil.GREEN));
+                    System.out.println(ColorUtil.colored("All other applications have been automatically withdrawn.", ColorUtil.YELLOW));
                 } catch (ApplicationException e) {
                     System.out.println("Failed to confirm placement: " + e.getMessage());
                 }
@@ -1088,7 +1088,7 @@ public class Main {
                 
                 if (decision.equals("A")) {
                     registrationService.approveRepresentative(staff, selected);
-                    System.out.println("Company representative approved!");
+                    System.out.println(ColorUtil.colored("Company representative approved!", ColorUtil.GREEN));
                 } else if (decision.equals("R")) {
                     registrationService.rejectRepresentative(staff, selected);
                     System.out.println("Company representative rejected.");
@@ -1559,7 +1559,7 @@ public class Main {
                 // Load applications
                 List<Application> applications = dataAccess.loadApplications("data/applications.txt", users, internships);
                 for (Application app : applications) {
-                    applicationService.addApplication(app);
+                    ((ApplicationController) applicationService).loadApplication(app);
                 }
                 
                 System.out.println("Data loaded successfully!");
