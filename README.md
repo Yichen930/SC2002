@@ -90,21 +90,26 @@ java -cp bin Main
 3. Company Rep toggles visibility (optional)
 
 **Phase 2: Student Application**
+
 4. Student browses internships (auto-filtered by major, year, dates, slots)
+
 5. Student submits application → `ApplicationStatus.PENDING`
 
 **Phase 3: Company Review**
+
 6. Company Rep reviews application:
    - **Approve** → `ApplicationStatus.ACCEPTED` (awaiting student confirmation)
    - **Reject** → `ApplicationStatus.REJECTED`
 
 **Phase 4: Student Confirmation**
+
 7. Student accepts placement:
    - Internship slot reserved (`filledSlots++`)
    - All other active applications auto-withdrawn → `ApplicationStatus.WITHDRAWN`
    - If capacity reached → `InternshipStatus.FILLED`
 
 **Phase 5: Withdrawals**
+
 8. **Pre-Confirmation Withdrawal**: 
    - Student withdraws directly → `ApplicationStatus.WITHDRAWN`
 9. **Post-Confirmation Withdrawal**: 
