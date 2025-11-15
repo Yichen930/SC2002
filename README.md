@@ -80,13 +80,58 @@ java -cp bin Main
 - Internships: Max 10 slots; auto-filled when capacity reached
 - Withdrawals: Post-confirmation requires staff approval
 
+
+
 ## Application Flow
 
-1. Company Rep creates internship (PENDING)
-2. Staff approves internship (APPROVED)
-3. Student applies (Application: PENDING)
-4. Rep approves application (Application: ACCEPTED)
-5. Student accepts placement (slot reserved, other apps withdrawn)
+**Phase 1: Internship Setup**
+1. Company Rep creates internship → `InternshipStatus.PENDING`
+2. Staff reviews and approves → `InternshipStatus.APPROVED` (visible to students)
+3. Company Rep toggles visibility (optional)
+
+**Phase 2: Student Application**
+4. Student browses internships (auto-filtered by major, year, dates, slots)
+5. Student submits application → `ApplicationStatus.PENDING`
+
+**Phase 3: Company Review**
+6. Company Rep reviews application:
+   - **Approve** → `ApplicationStatus.ACCEPTED` (awaiting student confirmation)
+   - **Reject** → `ApplicationStatus.REJECTED`
+
+**Phase 4: Student Confirmation**
+7. Student accepts placement:
+   - Internship slot reserved (`filledSlots++`)
+   - All other active applications auto-withdrawn → `ApplicationStatus.WITHDRAWN`
+   - If capacity reached → `InternshipStatus.FILLED`
+
+**Phase 5: Withdrawals**
+8. **Pre-Confirmation Withdrawal**: 
+   - Student withdraws directly → `ApplicationStatus.WITHDRAWN`
+9. **Post-Confirmation Withdrawal**: 
+   - Student creates `WithdrawalRequest` → `WithdrawalStatus.PENDING`
+   - Staff approves → Slot freed, `ApplicationStatus.WITHDRAWN`, `InternshipStatus.FILLED` → `APPROVED`
+   - Staff rejects → Placement maintained
+
+## State Diagram
+
+```
+INTERNSHIP:
+PENDING → [Staff Approves] → APPROVED → [Capacity Full] → FILLED
+                                    ↑                          ↓
+                                    └───── [Slot Freed] ───────┘
+
+APPLICATION:
+                        ┌──→ REJECTED (Company denies)
+                        │
+PENDING → [Company] ────┤
+                        │
+                        └──→ ACCEPTED → [Student confirms] → Slot Reserved
+                                                              ↓
+                                                         Other apps → WITHDRAWN
+
+PRE-CONFIRMATION: Student withdraws → WITHDRAWN (no approval needed)
+POST-CONFIRMATION: WithdrawalRequest.PENDING → [Staff] → APPROVED/REJECTED
+```
 
 ## Key Design Decisions
 
