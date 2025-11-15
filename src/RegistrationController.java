@@ -65,9 +65,11 @@ public class RegistrationController implements RegistrationServiceInterface {
         // Persist changes to file
         try {
             writeUsersToFile("data/users.txt");
+            SystemLogger.log("APPROVE_REP", staff.getId(), "Approved: " + rep.getId());
         } catch (Exception e) {
             // If persistence fails, revert the change
             rep.setApproved(false);
+            SystemLogger.logSystem("APPROVE_REP_FAILED", "Failed for " + rep.getId() + ": " + e.getMessage());
             return false;
         }
         
@@ -119,7 +121,7 @@ public class RegistrationController implements RegistrationServiceInterface {
 
     public void setUsers(List<User> users) {
         if (users != null) {
-            this.users = new ArrayList<>(users);
+            this.users = users; // Share the same list reference
             for (User user : users) {
                 if (user instanceof CompanyRepresentative) {
                     CompanyRepresentative rep = (CompanyRepresentative) user;

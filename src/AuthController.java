@@ -59,7 +59,7 @@ public class AuthController implements AuthServiceInterface {
 
     public void setUsers(List<User> users) {
         if (users != null) {
-            this.users = new ArrayList<>(users);
+            this.users = users; // Share the same list reference
         }
     }
     

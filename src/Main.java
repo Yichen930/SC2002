@@ -202,7 +202,7 @@ public class Main {
                 System.out.println(ColorUtil.colored("Your User ID is: " + email, ColorUtil.GREEN));
                 System.out.println(ColorUtil.colored("Note: Your account needs to be approved by Career Center Staff before you can create internships.", ColorUtil.YELLOW));
             } else {
-                System.out.println("Registration failed. Email may already be registered.");
+                System.out.println(ColorUtil.colored("Registration failed. Email may already be registered.", ColorUtil.RED));
             }
         }
 
