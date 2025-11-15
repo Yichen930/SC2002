@@ -1,3 +1,22 @@
+/**
+ * Abstract base class representing a user in the Internship Placement Management System.
+ * 
+ * <p>This class provides common functionality for all user types:</p>
+ * <ul>
+ *   <li>{@link Student} - Can browse and apply for internships</li>
+ *   <li>{@link CompanyRepresentative} - Can create and manage internship opportunities</li>
+ *   <li>{@link CareerCenterStaff} - Can approve internships and manage the system</li>
+ * </ul>
+ * 
+ * <p>All users have:</p>
+ * <ul>
+ *   <li>Unique ID (student ID, email, or staff email)</li>
+ *   <li>Name</li>
+ *   <li>Password (encrypted, default: "password")</li>
+ * </ul>
+ * 
+ * @version 1.0
+ */
 public abstract class User {
     private String id;
     private String name;
