@@ -963,7 +963,8 @@ public class Main {
             List<InternshipOpportunity> toggleable = new ArrayList<>();
             
             for (InternshipOpportunity opp : internships) {
-                if (opp.getStatus() == InternshipStatus.APPROVED) {
+                // Allow toggling for APPROVED or FILLED internships
+                if (opp.getStatus() == InternshipStatus.APPROVED || opp.getStatus() == InternshipStatus.FILLED) {
                     toggleable.add(opp);
                 }
             }
@@ -993,6 +994,7 @@ public class Main {
                 
                 try {
                     internshipService.toggleVisibility(selected);
+                    internshipService.saveInternships();
                     System.out.println("Visibility toggled! Now: " + (selected.isVisible() ? "Visible" : "Hidden"));
                 } catch (IllegalStateException e) {
                     System.out.println("Error: " + e.getMessage());
