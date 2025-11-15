@@ -41,7 +41,8 @@ A Java command-line application for managing internship opportunities, student a
 - **Controller**: Service implementations (Auth, Application, Internship)
 
 **SOLID Principles**
-- Interface-based design for loose coupling
+- Single Responsibility Principle: Each part is responsible for one functionality
+- Interface-based design: For loose coupling
 - Dependency Inversion: CLI depends on service interfaces
 - Single Responsibility: Each controller handles one domain
 - Encapsulation with private fields and public methods
