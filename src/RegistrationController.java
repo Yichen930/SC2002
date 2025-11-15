@@ -61,6 +61,16 @@ public class RegistrationController implements RegistrationServiceInterface {
             return false;
         }
         rep.setApproved(true);
+        
+        // Persist changes to file
+        try {
+            writeUsersToFile("data/users.txt");
+        } catch (Exception e) {
+            // If persistence fails, revert the change
+            rep.setApproved(false);
+            return false;
+        }
+        
         return true;
     }
 
@@ -69,6 +79,16 @@ public class RegistrationController implements RegistrationServiceInterface {
             return false;
         }
         rep.setApproved(false);
+        
+        // Persist changes to file
+        try {
+            writeUsersToFile("data/users.txt");
+        } catch (Exception e) {
+            // If persistence fails, revert the change
+            rep.setApproved(true);
+            return false;
+        }
+        
         return true;
     }
 

@@ -40,6 +40,14 @@ public class ApplicationController implements ApplicationServiceInterface {
                 otherApp.setStatus(ApplicationStatus.WITHDRAWN);
             }
         }
+        
+        // Persist changes to file
+        try {
+            writeApplicationsToFile("data/applications.txt");
+            SystemLogger.logSystem("APPLICATION_ACCEPTED", "Student " + student.getName() + " accepted placement for " + opp.getTitle());
+        } catch (Exception e) {
+            SystemLogger.logSystem("ERROR", "Failed to save applications after acceptance: " + e.getMessage());
+        }
 
         return true;
     }
@@ -67,6 +75,14 @@ public class ApplicationController implements ApplicationServiceInterface {
         }
         if (app.getStatus() == ApplicationStatus.PENDING) {
             app.setStatus(decision);
+            
+            // Persist changes to file
+            try {
+                writeApplicationsToFile("data/applications.txt");
+                SystemLogger.logSystem("APPLICATION_REVIEWED", "Application for " + app.getStudent().getName() + " reviewed: " + decision);
+            } catch (Exception e) {
+                SystemLogger.logSystem("ERROR", "Failed to save applications after review: " + e.getMessage());
+            }
         }
     }
 
@@ -100,11 +116,45 @@ public class ApplicationController implements ApplicationServiceInterface {
     public void addApplication(Application app) {
         if (app != null && !applications.contains(app)) {
             applications.add(app);
+            
+            // Persist changes to file
+            try {
+                writeApplicationsToFile("data/applications.txt");
+                SystemLogger.logSystem("APPLICATION_ADDED", "Application added for " + app.getStudent().getName() + " to " + app.getOpportunity().getTitle());
+            } catch (Exception e) {
+                // Log the error
+                SystemLogger.logSystem("ERROR", "Failed to save applications: " + e.getMessage());
+                // If persistence fails, revert the change
+                applications.remove(app);
+            }
         }
     }
 
     public List<Application> getAllApplications() {
         return new ArrayList<>(applications);
+    }
+    
+    private void writeApplicationsToFile(String filepath) throws java.io.IOException {
+        if (filepath == null) throw new java.io.IOException("Invalid filepath");
+
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(filepath))) {
+            // Write header/comments
+            pw.println("# Application Data File");
+            pw.println("# Format: STUDENT_ID|INTERNSHIP_TITLE|STATUS|CREATED_DATE|UPDATED_DATE");
+            pw.println();
+
+            for (Application app : applications) {
+                if (app == null) continue;
+                
+                pw.printf("%s|%s|%s|%s|%s\n",
+                    app.getStudent().getId(),
+                    app.getOpportunity().getTitle(),
+                    app.getStatus(),
+                    app.getCreatedAt(),
+                    app.getUpdatedAt()
+                );
+            }
+        }
     }
 }
 

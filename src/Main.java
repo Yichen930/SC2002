@@ -515,9 +515,9 @@ public class Main {
                     student.addApplication(app);
                     applicationService.addApplication(app);
                     System.out.println("Application submitted successfully!");
-                    System.out.println("Status: PENDING - Awaiting company review");
+                    System.out.println(ColorUtil.colored("Status: PENDING - Awaiting company review", ColorUtil.YELLOW));
                 } catch (ApplicationException e) {
-                    System.out.println("Application failed: " + e.getMessage());
+                    System.out.println(ColorUtil.colored("Application failed: " + e.getMessage(), ColorUtil.RED));
                 }
                 } else {
                 System.out.println("Invalid selection.");
@@ -637,8 +637,8 @@ public class Main {
 
                 applicationService.requestForWithdrawal(selected);
                 selected.getWithdrawal().setWithdrawalReason(reason);
-                System.out.println("Withdrawal request submitted successfully.");
-                System.out.println("Staff will review your request.");
+                System.out.println(ColorUtil.colored("Withdrawal request submitted successfully.", ColorUtil.GREEN));
+                System.out.println(ColorUtil.colored("Staff will review your request.", ColorUtil.GREEN));
             } else {
                 System.out.println("Invalid selection.");
             }
@@ -695,19 +695,36 @@ public class Main {
             } catch (Exception e) {
                 System.out.println("Invalid date format. Setting to 1 year from today.");
                 opp.setCloseDate(java.time.LocalDate.now().plusYears(1));
+            }            
+            // Set preferred major(s)
+            System.out.print("Set preferred major(s)? (Y/N): ");
+            String setPref = scanner.nextLine().trim().toUpperCase();
+            if (setPref.equals("Y")) {
+                System.out.print("Enter preferred major(s) (comma-separated, e.g., Computer Science,Engineering): ");
+                String majorsStr = scanner.nextLine().trim();
+                if (!majorsStr.isEmpty()) {
+                    java.util.List<String> majors = new java.util.ArrayList<>();
+                    for (String major : majorsStr.split(",")) {
+                        majors.add(major.trim());
+                    }
+                    opp.setPreferredMajor(majors);
+                    System.out.println("Preferred major(s) set: " + String.join(", ", majors));
+                }
+            } else {
+                System.out.println("No preferred major set - all students can see this internship.");
             }
             
             // Add the opportunity directly (staff approval will happen later)
             internshipService.addOpportunity(opp);
             rep.createInternship(opp);
-            System.out.println("Internship opportunity created and submitted for approval!");
+            System.out.println(ColorUtil.colored("Internship opportunity created and submitted for approval!", ColorUtil.GREEN));
         }
 
         private void viewCreatedInternships(CompanyRepresentative rep) {
             List<InternshipOpportunity> internships = rep.getCreatedInternships();
             System.out.println("\n--- My Created Internships ---");
             if (internships.isEmpty()) {
-                System.out.println("You have not created any internships.");
+                System.out.println(ColorUtil.colored("You have not created any internships.", ColorUtil.YELLOW));
             } else {
                 int index = 1;
                 for (InternshipOpportunity opp : internships) {
@@ -777,7 +794,7 @@ public class Main {
                     }
                 }
                 
-                System.out.println("Internship updated successfully!");
+                System.out.println(ColorUtil.colored("Internship updated successfully!", ColorUtil.GREEN));
             } else {
                 System.out.println("Invalid selection.");
             }
@@ -834,7 +851,7 @@ public class Main {
 
             List<InternshipOpportunity> myInternships = rep.getCreatedInternships();
             if (myInternships.isEmpty()) {
-                System.out.println("You have not created any internships yet.");
+                System.out.println(ColorUtil.colored("You have not created any internships yet.", ColorUtil.YELLOW));
                 return;
             }
 
@@ -923,13 +940,13 @@ public class Main {
                 String decisionStr = scanner.nextLine().trim().toUpperCase();
                 
                 if (decisionStr.equals("APPROVE")) {
-                    selected.setStatus(ApplicationStatus.ACCEPTED);
-                    System.out.println("Application approved!");
+                    applicationService.review(selected.getOpportunity(), selected, ApplicationStatus.ACCEPTED);
+                    System.out.println(ColorUtil.colored("Application approved!", ColorUtil.GREEN));
                     System.out.println("Student's application status is now 'Successful'.");
                     System.out.println("Student can now accept the placement confirmation.");
                 } else if (decisionStr.equals("REJECT")) {
-                    selected.setStatus(ApplicationStatus.REJECTED);
-                    System.out.println("Application rejected.");
+                    applicationService.review(selected.getOpportunity(), selected, ApplicationStatus.REJECTED);
+                    System.out.println(ColorUtil.colored("Application rejected.", ColorUtil.YELLOW));
                 } else {
                     System.out.println("Invalid decision. Please enter 'APPROVE' or 'REJECT'.");
                 }
@@ -949,7 +966,7 @@ public class Main {
             }
             
             if (toggleable.isEmpty()) {
-                System.out.println("No approved internships to toggle visibility.");
+                System.out.println(ColorUtil.colored("No approved internships to toggle visibility.", ColorUtil.YELLOW));
                 return;
             }
             
@@ -1021,7 +1038,7 @@ public class Main {
                 
                 if (decision.equals("A")) {
                     internshipService.approve(staff, selected);
-                    System.out.println("Internship approved!");
+                    System.out.println(ColorUtil.colored("Internship approved!", ColorUtil.GREEN));
                 } else if (decision.equals("R")) {
                     internshipService.reject(staff, selected);
                     System.out.println("Internship rejected.");
@@ -1131,8 +1148,8 @@ public class Main {
                 applicationService.decideWithdrawal(staff, selected, decision);
                 
                 if (decision == WithdrawalStatus.APPROVED) {
-                    System.out.println("Withdrawal approved. Application marked as WITHDRAWN.");
-                    System.out.println("Slot has been freed on the internship.");
+                    System.out.println(ColorUtil.colored("Withdrawal approved. Application marked as WITHDRAWN.", ColorUtil.GREEN));
+                    System.out.println(ColorUtil.colored("Slot has been freed on the internship.", ColorUtil.GREEN));
                 } else {
                     System.out.println("Withdrawal rejected. Application status unchanged.");
                 }

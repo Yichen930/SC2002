@@ -43,6 +43,17 @@ public class InternshipController implements InternshipServiceInterface {
 
         if (opp.getStatus() == InternshipStatus.PENDING) {
             opp.setStatus(InternshipStatus.APPROVED);
+            
+            // Persist changes to file
+            try {
+                writeInternshipsToFile("data/internships.txt");
+                SystemLogger.logSystem("INTERNSHIP_APPROVED", "Internship '" + opp.getTitle() + "' approved and saved");
+            } catch (Exception e) {
+                // Log the error
+                SystemLogger.logSystem("ERROR", "Failed to save internships: " + e.getMessage());
+                // If persistence fails, revert the change
+                opp.setStatus(InternshipStatus.PENDING);
+            }
         }
     }
 
@@ -53,6 +64,17 @@ public class InternshipController implements InternshipServiceInterface {
 
         if (opp.getStatus() == InternshipStatus.PENDING) {
             opp.setStatus(InternshipStatus.REJECTED);
+            
+            // Persist changes to file
+            try {
+                writeInternshipsToFile("data/internships.txt");
+                SystemLogger.logSystem("INTERNSHIP_REJECTED", "Internship '" + opp.getTitle() + "' rejected and saved");
+            } catch (Exception e) {
+                // Log the error
+                SystemLogger.logSystem("ERROR", "Failed to save internships: " + e.getMessage());
+                // If persistence fails, revert the change
+                opp.setStatus(InternshipStatus.PENDING);
+            }
         }
     }
 
@@ -229,6 +251,47 @@ public class InternshipController implements InternshipServiceInterface {
     
     public List<InternshipOpportunity> getOpportunities() {
         return new ArrayList<>(opportunities);
+    }
+    
+    private void writeInternshipsToFile(String filepath) throws java.io.IOException {
+        if (filepath == null) throw new java.io.IOException("Invalid filepath");
+
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(filepath))) {
+            // Write header/comments similar to sample file
+            pw.println("# Internship Data File");
+            pw.println("# Format: ID|TITLE|COMPANY|REP_ID|DESCRIPTION|LEVEL|PREFERRED_MAJOR|TOTAL_SLOTS|FILLED_SLOTS|STATUS|VISIBLE|OPEN_DATE|CLOSE_DATE");
+            pw.println();
+
+            int idCounter = 1;
+            for (InternshipOpportunity opp : opportunities) {
+                if (opp == null) continue;
+                
+                // Generate ID
+                String id = String.format("INT%03d", idCounter++);
+                
+                // Format preferred majors as comma-separated list
+                String preferredMajor = "";
+                if (opp.getPreferredMajor() != null && !opp.getPreferredMajor().isEmpty()) {
+                    preferredMajor = String.join(",", opp.getPreferredMajor());
+                }
+                
+                pw.printf("%s|%s|%s|%s|%s|%s|%s|%d|%d|%s|%b|%s|%s\n",
+                    id,
+                    opp.getTitle(),
+                    opp.getCompanyName(),
+                    opp.getRepInCharge() != null ? opp.getRepInCharge().getId() : "",
+                    opp.getDescription() != null ? opp.getDescription() : "",
+                    opp.getLevel(),
+                    preferredMajor,
+                    opp.getTotalSlots(),
+                    opp.getFilledSlots(),
+                    opp.getStatus(),
+                    opp.isVisible(),
+                    opp.getOpenDate(),
+                    opp.getCloseDate()
+                );
+            }
+        }
     }
 }
 
