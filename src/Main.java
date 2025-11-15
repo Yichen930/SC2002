@@ -198,9 +198,9 @@ public class Main {
 
             boolean success = registrationService.registerCompanyRepresentative(name, email, companyName, department, position, password);
             if (success) {
-                System.out.println("Company representative registered successfully!");
-                System.out.println("Your User ID is: " + email);
-                System.out.println("Note: Your account needs to be approved by Career Center Staff before you can create internships.");
+                System.out.println(ColorUtil.colored("Company representative registered successfully!", ColorUtil.GREEN));
+                System.out.println(ColorUtil.colored("Your User ID is: " + email, ColorUtil.GREEN));
+                System.out.println(ColorUtil.colored("Note: Your account needs to be approved by Career Center Staff before you can create internships.", ColorUtil.YELLOW));
             } else {
                 System.out.println("Registration failed. Email may already be registered.");
             }
