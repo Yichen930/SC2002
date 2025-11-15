@@ -53,6 +53,11 @@ public interface InternshipServiceInterface {
     void toggleVisibility(InternshipOpportunity opp);
     
     /**
+     * Saves all internships to persistent storage.
+     */
+    void saveInternships();
+    
+    /**
      * Displays details of an internship opportunity.
      * 
      * @param opp the internship to display

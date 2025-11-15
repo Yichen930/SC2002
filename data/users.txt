@@ -6,8 +6,10 @@
 
 STUDENT|U2345123F|Alice|password|Computer Science|2
 STUDENT|U3456234G|Bob|password|Engineering|3
-STUDENT|U1234567A|Charlie|password|Business|1
+STUDENT|U1234567A|Charlie|pw|Business|3
+STUDENT|U1234567B|Janice|pw|Business|3
+STUDENT|U1234567C|Chole|pw|Business|3
 STUDENT|U4567890D|Diana|password|Computer Science|4
 COMPANY_REP|john@techcorp.com|John Smith|password|Tech Corp|Engineering|Senior Recruiter|true
-COMPANY_REP|jane@startupco.com|Jane Doe|password|StartupCo|HR|Talent Acquisition|false
+COMPANY_REP|jane@startupco.com|Jane Doe|password|StartupCo|HR|Talent Acquisition|true
 STAFF|admin@ntu.edu.sg|Admin|password|Career Services

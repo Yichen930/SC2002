@@ -84,6 +84,14 @@ public class InternshipController implements InternshipServiceInterface {
         }
         opp.setVisible(!opp.isVisible());
     }
+    
+    public void saveInternships() {
+        try {
+            writeInternshipsToFile("data/internships.txt");
+        } catch (Exception e) {
+            SystemLogger.logSystem("ERROR", "Failed to save internships: " + e.getMessage());
+        }
+    }
 
     public void showInternshipOpportunity(InternshipOpportunity opp) {
         if (opp == null) {

@@ -11,9 +11,14 @@ import java.util.List;
  */
 public class ApplicationController implements ApplicationServiceInterface {
     private List<Application> applications;
+    private InternshipServiceInterface internshipService;
 
     public ApplicationController() {
         this.applications = new ArrayList<>();
+    }
+    
+    public void setInternshipService(InternshipServiceInterface internshipService) {
+        this.internshipService = internshipService;
     }
 
     public boolean accept(Student student, Application app) throws ApplicationException {
@@ -44,6 +49,9 @@ public class ApplicationController implements ApplicationServiceInterface {
         // Persist changes to file
         try {
             writeApplicationsToFile("data/applications.txt");
+            if (internshipService != null) {
+                internshipService.saveInternships();
+            }
             SystemLogger.logSystem("APPLICATION_ACCEPTED", "Student " + student.getName() + " accepted placement for " + opp.getTitle());
         } catch (Exception e) {
             SystemLogger.logSystem("ERROR", "Failed to save applications after acceptance: " + e.getMessage());
@@ -109,6 +117,17 @@ public class ApplicationController implements ApplicationServiceInterface {
                 app.setStatus(ApplicationStatus.WITHDRAWN);
                 // Free the slot on the internship
                 app.getOpportunity().freeSlot();
+                
+                // Persist changes
+                try {
+                    writeApplicationsToFile("data/applications.txt");
+                    if (internshipService != null) {
+                        internshipService.saveInternships();
+                    }
+                    SystemLogger.logSystem("WITHDRAWAL_APPROVED", "Withdrawal approved for " + app.getStudent().getName());
+                } catch (Exception e) {
+                    SystemLogger.logSystem("ERROR", "Failed to save after withdrawal: " + e.getMessage());
+                }
             }
         }
     }

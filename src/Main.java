@@ -96,6 +96,9 @@ public class Main {
             this.registrationService = new RegistrationController();
             this.dataAccess = new DataManager();
             
+            // Set up controller dependencies
+            ((ApplicationController) this.applicationService).setInternshipService(this.internshipService);
+            
             // Load data from files at startup
             loadDataFromFiles();
         }
