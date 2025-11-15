@@ -720,6 +720,8 @@ public class Main {
             // Add the opportunity directly (staff approval will happen later)
             internshipService.addOpportunity(opp);
             rep.createInternship(opp);
+            internshipService.saveInternships();
+            SystemLogger.logSystem("INTERNSHIP_CREATED", "Internship '" + opp.getTitle() + "' created by " + rep.getName());
             System.out.println(ColorUtil.colored("Internship opportunity created and submitted for approval!", ColorUtil.GREEN));
         }
 
@@ -798,6 +800,7 @@ public class Main {
                 }
                 
                 System.out.println(ColorUtil.colored("Internship updated successfully!", ColorUtil.GREEN));
+                internshipService.saveInternships();
             } else {
                 System.out.println("Invalid selection.");
             }
@@ -834,6 +837,7 @@ public class Main {
                 if (confirm.equals("yes")) {
                     boolean deleted = internshipService.deleteOpportunity(rep, selected);
                     if (deleted) {
+                        internshipService.saveInternships();
                         System.out.println("Internship deleted successfully!");
                     } else {
                         System.out.println("Failed to delete internship.");
